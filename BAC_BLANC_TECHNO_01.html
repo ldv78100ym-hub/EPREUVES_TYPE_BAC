@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAC BLANC DE MATHÉMATIQUES</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --page-bg: #ffffff;
+            --text-color: #000000;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-regenerate {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-regenerate:hover { background-color: #1a252f; }
+        .page {
+            background-color: var(--page-bg);
+            max-width: 21cm;
+            margin: 0 auto 20px auto;
+            padding: 2cm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .page-break { page-break-after: always; }
+        .text-center { text-align: center; }
+        .text-left { text-align: left; }
+        .title-lycee { font-size: 18pt; font-weight: bold; margin-bottom: 2cm; }
+        .student-info { margin-bottom: 2cm; line-height: 2; }
+        .exam-title { font-size: 24pt; font-weight: bold; margin: 1cm 0; }
+        .section-title { font-size: 14pt; font-weight: bold; margin-top: 1.5cm; margin-bottom: 0.5cm; }
+        .qcm-options { display: flex; justify-content: space-between; margin-top: 10px; margin-bottom: 20px; }
+        .qcm-options span { flex: 1; }
+        .canvas-container { text-align: center; margin: 20px 0; }
+        canvas { border: 1px solid transparent; }
+        
+        .table-probas {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        .table-probas th, .table-probas td {
+            border: 1px solid black;
+            padding: 10px;
+            text-align: center;
+        }
+        .python-code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            width: fit-content;
+            margin: 0 auto;
+            text-align: left;
+        }
+        ul.no-bullet { list-style-type: none; padding-left: 0; }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .controls { display: none; }
+            .page { box-shadow: none; margin: 0; padding: 1.5cm; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn-regenerate" onclick="generateExam()">Générer un nouveau sujet aléatoire</button>
+    </div>
+
+    <div class="page page-break">
+        <div class="text-center title-lycee">LYCÉE LÉONARD DE VINCI - SAINT-GERMAIN-EN-LAYE</div>
+        
+        <div class="student-info">
+            <strong>NOM :</strong> ................................................................................................<br>
+            <strong>PRÉNOM :</strong> ..........................................................................................<br>
+            <strong>CLASSE :</strong> ............................................................................................
+        </div>
+        
+        <div class="text-center" style="margin-top: 2cm;">
+            <div style="font-size: 14pt;">STI2D / STL</div>
+            <div style="font-size: 14pt;" id="exam-date">25 MARS 2026</div>
+            
+            <div class="exam-title">BAC BLANC DE MATHÉMATIQUES</div>
+            <div style="font-size: 18pt; font-weight: bold; margin-bottom: 2cm;">1ère technologique</div>
+            
+            <div style="font-size: 14pt; font-weight: bold; margin-bottom: 1.5cm;">Durée de l'épreuve : 2 heures</div>
+        </div>
+        
+        <div class="text-left" style="font-size: 12pt; line-height: 1.6;">
+            L'usage de la calculatrice collège ou lycée n'est pas autorisé.<br>
+            La clarté et le soin apportés à votre copie compteront dans la notation.<br>
+            Dès que ce sujet vous est remis, assurez-vous qu'il est complet.<br>
+            Ce sujet comporte 6 pages numérotées de 1/6 à 6/6.<br>
+            <strong>LE SUJET COMPLET EST À RENDRE</strong><br>
+            Automatismes, question 3.c de l'exercice 1, question 4 de l'exercice 2, question 3 de l'exercice 3 à compléter sur la feuille du sujet.<br>
+            Tous les autres exercices sont à traiter sur une copie.
+        </div>
+    </div>
+
+    <div class="page page-break">
+        <div class="section-title">PREMIÈRE PARTIE AUTOMATISMES - QCM (6 pts)</div>
+        <p><em>Entourer clairement l'unique bonne réponse pour chaque question suivante :</em></p>
+        
+        <div id="qcm-part1"></div>
+    </div>
+
+    <div class="page page-break">
+        <p>Soit le graphique suivant utile pour répondre aux questions 8 et 9.<br>
+        La courbe suivante est celle d'une fonction $f$ définie sur $[-3;4]$.</p>
+        
+        <div class="canvas-container">
+            <canvas id="canvas-qcm" width="400" height="250"></canvas>
+        </div>
+        
+        <div id="qcm-part2"></div>
+    </div>
+
+    <div class="page page-break">
+        <div class="section-title">Exercice 1 (5 points)</div>
+        <div id="exo1-texte"></div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas-exo1" width="450" height="550"></canvas>
+        </div>
+        
+        <div id="exo1-suite"></div>
+    </div>
+
+    <div class="page page-break">
+        <div class="section-title">Exercice 2 (4 points)</div>
+        <div id="exo2-texte"></div>
+    </div>
+
+    <div class="page">
+        <div class="section-title">Exercice 3 (5 points)</div>
+        <div id="exo3-texte"></div>
+        
+        <div class="canvas-container" style="margin-top: 1cm;">
+            <canvas id="canvas-tree" width="500" height="300"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- UTILITAIRES ---
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (array) => array.sort(() => Math.random() - 0.5);
+
+        // --- GÉNÉRATION DES DONNÉES ---
+        function generateExam() {
+            const mois = ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI"];
+            document.getElementById('exam-date').innerHTML = `${rand(10, 28)} ${mois[rand(0,4)]} 2026`;
+
+            generateQCM();
+            generateExo1();
+            generateExo2();
+            generateExo3();
+
+            MathJax.typesetPromise();
+        }
+
+        function generateQCM() {
+            let html1 = ''; let html2 = '';
+
+            // Q1: Fraction
+            const denomQ1 = [4, 5, 6, 8, 10][rand(0, 4)];
+            const numQ1 = rand(1, denomQ1 - 1);
+            const totalQ1 = denomQ1 * rand(10, 80);
+            const repQ1 = (totalQ1 / denomQ1) * numQ1;
+            const optsQ1 = shuffle([repQ1, totalQ1 / denomQ1, totalQ1 * numQ1, repQ1 + denomQ1 * 10]);
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 1</strong> $\\dfrac{${numQ1}}{${denomQ1}}$ de ${totalQ1} kg est égal à :<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ1[0]} kg</span><span>B. ${optsQ1[1]} kg</span>
+                        <span>C. ${optsQ1[2]} kg</span><span>D. ${optsQ1[3]} kg</span>
+                    </div>
+                </div>`;
+
+            // Q2: Pourcentages
+            const p1 = rand(30, 60); const p2 = rand(2, 8);
+            const repQ2 = (p1 * p2) / 100;
+            const optsQ2 = shuffle([repQ2.toString().replace('.',','), (p1+p2), (p1-p2), (repQ2*10).toString().replace('.',',')]);
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 2</strong> Dans une classe, ${p1}\% des élèves sont des garçons et parmi eux, ${p2}\% sont internes. Le pourcentage de garçons internes dans la classe est :<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ2[0]}\%</span><span>B. ${optsQ2[1]}\%</span>
+                        <span>C. ${optsQ2[2]}\%</span><span>D. ${optsQ2[3]}\%</span>
+                    </div>
+                </div>`;
+
+            // Q3: Diminution
+            const baisse = rand(12, 35);
+            const repQ3 = (1 - baisse/100).toFixed(2).replace('.',',');
+            const optsQ3 = shuffle([repQ3, (1 + baisse/100).toFixed(2).replace('.',','), (baisse/100).toFixed(2).replace('.',','), (1 - baisse/1000).toFixed(3).replace('.',',')]);
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 3</strong> Si une valeur diminue de ${baisse}\%, alors elle est multipliée par...<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ3[0]}</span><span>B. ${optsQ3[1]}</span>
+                        <span>C. ${optsQ3[2]}</span><span>D. ${optsQ3[3]}</span>
+                    </div>
+                </div>`;
+
+            // Q4: Calcul fraction
+            const a = rand(2, 5); const b = rand(2, 4); const c = rand(3, 7); const d = rand(4, 9);
+            const numVrai = a * d - b * c;
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 4</strong> $${a} - ${b} \\times \\dfrac{${c}}{${d}} = ...$<br>
+                    <div class="qcm-options">
+                        <span>A. $\\dfrac{${numVrai}}{${d}}$</span><span>B. $\\dfrac{${(a-b)*c}}{${d}}$</span>
+                        <span>C. $\\dfrac{${a*d + b*c}}{${d}}$</span><span>D. $\\dfrac{${numVrai + d}}{${d}}$</span>
+                    </div>
+                </div>`;
+
+            // Q5: Droite
+            const xa = rand(-5, -2); const ya = rand(1, 5);
+            const xb = rand(-1, 3); const yb = rand(-4, 0);
+            const m = (yb - ya) / (xb - xa);
+            const p = ya - m * xa;
+            let mStr = Number.isInteger(m) ? m : m.toFixed(1);
+            let pStr = Number.isInteger(p) ? p : p.toFixed(1);
+            let eqVraie = `y = ${mStr}x ${p >= 0 ? '+ '+pStr : '- '+Math.abs(pStr)}`;
+            const optsQ5 = shuffle([eqVraie, `y = ${mStr}x ${p >= 0 ? '- '+pStr : '+ '+Math.abs(pStr)}`, `y = ${pStr}x ${m >= 0 ? '+ '+mStr : '- '+Math.abs(mStr)}`, `y = ${(-mStr)}x ${p >= 0 ? '+ '+pStr : '- '+Math.abs(pStr)}`]);
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 5</strong> On considère $A(${xa};${ya})$ et $B(${xb};${yb})$. L'équation réduite de (AB) est :<br>
+                    <div class="qcm-options">
+                        <span>A. $${optsQ5[0]}$</span><span>B. $${optsQ5[1]}$</span>
+                        <span>C. $${optsQ5[2]}$</span><span>D. $${optsQ5[3]}$</span>
+                    </div>
+                </div>`;
+
+            // Q6: Evolutions
+            const d1 = rand(10, 40); const d2 = rand(10, 30);
+            const repQ6 = ((1 - d1/100) * (1 - d2/100)).toFixed(2).replace('.',',');
+            const optsQ6 = shuffle([repQ6, (1 - (d1+d2)/100).toFixed(2).replace('.',','), ((1 + d1/100) * (1 - d2/100)).toFixed(2).replace('.',','), "0,5"]);
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 6</strong> Coefficient multiplicateur pour une diminution de ${d1}\% suivie d'une diminution de ${d2}\% ?<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ6[0]}</span><span>B. ${optsQ6[1]}</span>
+                        <span>C. ${optsQ6[2]}</span><span>D. ${optsQ6[3]}</span>
+                    </div>
+                </div>`;
+
+            // Q7: Groupes
+            const totG = rand(50, 90); const gA = rand(20, totG/2); const gB = rand(10, totG/4);
+            const optsQ7 = shuffle([totG - gA - gB, gA + gB, totG - gA, totG - gB]);
+            html1 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 7</strong> Sur ${totG} personnes, groupe A: ${gA}, groupe B: ${gB}, groupe C: les autres. L'effectif du groupe C est :<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ7[0]}</span><span>B. ${optsQ7[1]}</span>
+                        <span>C. ${optsQ7[2]}</span><span>D. ${optsQ7[3]}</span>
+                    </div>
+                </div>`;
+
+            document.getElementById('qcm-part1').innerHTML = html1;
+
+            // --- GRAPHIQUE QCM ---
+            const canvasQCM = document.getElementById('canvas-qcm');
+            const ctxQ = canvasQCM.getContext('2d');
+            ctxQ.clearRect(0, 0, canvasQCM.width, canvasQCM.height);
+            const unit = 40; const originX = 4 * unit; const originY = 3 * unit; 
+            
+            ctxQ.strokeStyle = '#ddd'; ctxQ.lineWidth = 1;
+            for(let i=0; i<=canvasQCM.width; i+=unit) { ctxQ.beginPath(); ctxQ.moveTo(i,0); ctxQ.lineTo(i,canvasQCM.height); ctxQ.stroke(); }
+            for(let i=0; i<=canvasQCM.height; i+=unit) { ctxQ.beginPath(); ctxQ.moveTo(0,i); ctxQ.lineTo(canvasQCM.width,i); ctxQ.stroke(); }
+            
+            ctxQ.strokeStyle = '#000'; ctxQ.lineWidth = 2;
+            ctxQ.beginPath(); ctxQ.moveTo(0, originY); ctxQ.lineTo(canvasQCM.width, originY); ctxQ.stroke();
+            ctxQ.beginPath(); ctxQ.moveTo(originX, 0); ctxQ.lineTo(originX, canvasQCM.height); ctxQ.stroke();
+            
+            ctxQ.font = "12px Arial"; ctxQ.fillStyle = "black";
+            for(let x=-3; x<=4; x++) { if(x!==0) ctxQ.fillText(x, originX + x*unit - 5, originY + 15); }
+            for(let y=-2; y<=2; y++) { if(y!==0) ctxQ.fillText(y, originX + 5, originY - y*unit + 5); }
+            ctxQ.fillText("0", originX - 12, originY + 15);
+
+            const pointsQCM = []; let y_current = rand(0, 2);
+            for(let x=-3; x<=4; x++) {
+                pointsQCM.push({x: x, y: y_current});
+                let step = rand(-2, 2);
+                if(y_current + step > 2) y_current -= 1; else if(y_current + step < -2) y_current += 1; else y_current += step;
+            }
+            
+            ctxQ.strokeStyle = 'blue'; ctxQ.lineWidth = 2; ctxQ.beginPath();
+            pointsQCM.forEach((pt, i) => {
+                let px = originX + pt.x * unit; let py = originY - pt.y * unit;
+                if(i===0) ctxQ.moveTo(px, py); else ctxQ.lineTo(px, py);
+            });
+            ctxQ.stroke();
+
+            const targetY = rand(-1, 1);
+            html2 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 8</strong> L'équation $f(x) = ${targetY}$ admet pour ensemble de solutions dans $[-3;4]$ :<br>
+                    <div class="qcm-options">
+                        <span>A. $S = \\{...\\}$</span><span>B. $S = \\{...\\}$</span>
+                        <span>C. $S = \\{...\\}$</span><span>D. $S = \\emptyset$</span>
+                    </div>
+                </div>
+                <div style="margin-top: 20px;">
+                    <strong>Question 9</strong> L'inéquation $f(x) \\le ${targetY}$ admet pour solutions dans $[-3;4]$ :<br>
+                    <div class="qcm-options">
+                        <span>A. $S = [...]$</span><span>B. $S = [...]$</span>
+                        <span>C. $S = ]...[$</span><span>D. $S = \\emptyset$</span>
+                    </div>
+                </div>`;
+
+            // Q10
+            const q10_type = rand(0, 2);
+            let q10_text = ""; let optsQ10 = [];
+            if (q10_type === 0) {
+                const valA = rand(2, 15);
+                const unitesA = [{u: "m^2", f: 1}, {u: "dm^2", f: 100}, {u: "cm^2", f: 10000}, {u: "mm^2", f: 1000000}];
+                const fromIdx = rand(0, 2); const toIdx = fromIdx + 1; 
+                const factor = unitesA[toIdx].f / unitesA[fromIdx].f;
+                const ansA = valA * factor;
+                q10_text = `$${valA} \\text{ } ${unitesA[fromIdx].u} = ...$`;
+                optsQ10 = shuffle([ `$${ansA} \\text{ } ${unitesA[toIdx].u}$`, `$${ansA / 10} \\text{ } ${unitesA[toIdx].u}$`, `$${ansA * 10} \\text{ } ${unitesA[toIdx].u}$`, `$${valA * 10} \\text{ } ${unitesA[toIdx].u}$` ]);
+            } else if (q10_type === 1) {
+                const valV = rand(3, 12);
+                q10_text = `$${valV} \\text{ m}^3 = ...$`;
+                optsQ10 = shuffle([ `$${valV * 1000} \\text{ dm}^3$`, `$${valV * 100} \\text{ dm}^3$`, `$${valV * 10000} \\text{ dm}^3$`, `$${valV * 10} \\text{ dm}^3$` ]);
+            } else {
+                const valH = rand(2, 6); const mins = [15, 30, 45][rand(0, 2)];
+                const dec = mins === 15 ? 0.25 : (mins === 30 ? 0.5 : 0.75);
+                const ansH = valH + dec;
+                q10_text = `$${valH} \\text{ h } ${mins} \\text{ min} = ...$`;
+                optsQ10 = shuffle([ `$${ansH.toString().replace('.',',')} \\text{ h}$`, `$${valH},${mins} \\text{ h}$`, `$${(valH + 0.1).toString().replace('.',',')} \\text{ h}$`, `$${(ansH * 10).toString().replace('.',',')} \\text{ h}$` ]);
+            }
+            html2 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 10</strong> ${q10_text}<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ10[0]}</span><span>B. ${optsQ10[1]}</span>
+                        <span>C. ${optsQ10[2]}</span><span>D. ${optsQ10[3]}</span>
+                    </div>
+                </div>`;
+
+            // Q11
+            const m1 = rand(3, 15); const p_exp = rand(3, 5); const p_target = p_exp + 1;
+            const resQ11 = m1 * rand(2, 5);
+            const optsQ11 = shuffle([`$${resQ11/m1}x^{${p_exp}}$`, `$${resQ11/m1}x^{${p_target}}$`, `$${m1}x^{${p_exp}}$`, `$${resQ11}x$`]);
+            html2 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 11</strong> Compléter : $${m1}x \\times ... = ${resQ11}x^{${p_target}}$<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ11[0]}</span><span>B. ${optsQ11[1]}</span>
+                        <span>C. ${optsQ11[2]}</span><span>D. ${optsQ11[3]}</span>
+                    </div>
+                </div>`;
+
+            // Q12
+            const q12_type = rand(0, 2);
+            let q12_text = ""; let optsQ12 = [];
+            const vars = shuffle(['u', 'v', 'w', 'x', 'y', 'z', 'a', 'b', 'c', 'R', 'I', 'P']);
+            const v1 = vars[0], v2 = vars[1], v3 = vars[2];
+            const k = rand(2, 9);
+            if (q12_type === 0) {
+                q12_text = `Si $${v1} = \\dfrac{${v2} + ${k}}{${v3}}$, alors :`;
+                optsQ12 = shuffle([ `$${v3} = \\dfrac{${v2} + ${k}}{${v1}}$`, `$${v3} = ${v1}(${v2} + ${k})$`, `$${v3} = \\dfrac{${v1}}{${v2} + ${k}}$`, `$${v3} = ${v1} - ${v2} - ${k}$` ]);
+            } else if (q12_type === 1) {
+                q12_text = `Si $${v1} = ${v2}${v3} + ${k}$, alors :`;
+                optsQ12 = shuffle([ `$${v3} = \\dfrac{${v1} - ${k}}{${v2}}$`, `$${v3} = \\dfrac{${v1}}{${v2}} - ${k}$`, `$${v3} = ${v1} - ${k} - ${v2}$`, `$${v3} = \\dfrac{${v1} + ${k}}{${v2}}$` ]);
+            } else {
+                q12_text = `Si $${v1} = \\dfrac{${v2}}{${v3} - ${k}}$, alors :`;
+                optsQ12 = shuffle([ `$${v2} = ${v1}(${v3} - ${k})$`, `$${v2} = \\dfrac{${v1}}{${v3} - ${k}}$`, `$${v2} = ${v1}${v3} - ${k}$`, `$${v2} = \\dfrac{${v3} - ${k}}{${v1}}$` ]);
+            }
+            html2 += `
+                <div style="margin-top: 20px;">
+                    <strong>Question 12</strong> ${q12_text}<br>
+                    <div class="qcm-options">
+                        <span>A. ${optsQ12[0]}</span><span>B. ${optsQ12[1]}</span>
+                        <span>C. ${optsQ12[2]}</span><span>D. ${optsQ12[3]}</span>
+                    </div>
+                </div>`;
+
+            document.getElementById('qcm-part2').innerHTML = html2;
+        }
+
+        function generateExo1() {
+            const fonctions = [
+                { txt_f: "\\dfrac{4}{3}x^3 - 6x^2 + 5x + 2", txt_fp: "(2x - 5)(2x - 1)", eval_f: (x) => 4/3*Math.pow(x,3) - 6*x*x + 5*x + 2, pt1: {x: "1/2", y_txt: "\\dfrac{19}{6}"}, pt2: {x: "3/2", y_txt: "\\dfrac{1}{2}"}, pt3: {x: "5/2", y_txt: "-\\dfrac{13}{6}"} },
+                { txt_f: "\\dfrac{1}{3}x^3 - \\dfrac{1}{2}x^2 - 2x + 3", txt_fp: "(x + 1)(x - 2)", eval_f: (x) => 1/3*Math.pow(x,3) - 0.5*x*x - 2*x + 3, pt1: {x: "-1", y_txt: "\\dfrac{25}{6}"}, pt2: {x: "0", y_txt: "3"}, pt3: {x: "2", y_txt: "-\\dfrac{1}{3}"} },
+                { txt_f: "x^3 - 3x^2 + 4", txt_fp: "3x(x - 2)", eval_f: (x) => Math.pow(x,3) - 3*x*x + 4, pt1: {x: "0", y_txt: "4"}, pt2: {x: "1", y_txt: "2"}, pt3: {x: "2", y_txt: "0"} }
+            ];
+            const c = fonctions[rand(0, 2)];
+            document.getElementById('exo1-texte').innerHTML = `<p>On considère la fonction $f$ définie sur $\\mathbb{R}$ par : $$f(x) = ${c.txt_f}$$</p><ol><li>Calculer $f'(x)$ et montrer qu'on peut l'écrire sous la forme : $$f'(x) = ${c.txt_fp}$$</li><li style="margin-top:10px;"><ol type="a"><li>Étudier le signe de $f'(x)$ sur $\\mathbb{R}$ en construisant son tableau de signe.</li><li>En déduire le tableau de variation de la fonction $f$ sur $\\mathbb{R}$ (y inclure les images importantes).</li></ol></li><li style="margin-top:10px;">La courbe $\\mathcal{C}_f$ représentant la fonction $f$ est tracée sur le graphique ci-dessous :</li></ol>`;
+
+            const canvasEx1 = document.getElementById('canvas-exo1');
+            const ctx1 = canvasEx1.getContext('2d');
+            ctx1.clearRect(0, 0, canvasEx1.width, canvasEx1.height);
+            const scaleX = 50, scaleY = 30; const oX = canvasEx1.width / 2; const oY = canvasEx1.height / 2 + 50;
+
+            ctx1.strokeStyle = '#eee'; ctx1.lineWidth = 1;
+            for(let i=0; i<=canvasEx1.width; i+=scaleX/2) { ctx1.beginPath(); ctx1.moveTo(i,0); ctx1.lineTo(i,canvasEx1.height); ctx1.stroke(); }
+            for(let i=0; i<=canvasEx1.height; i+=scaleY/2) { ctx1.beginPath(); ctx1.moveTo(0,i); ctx1.lineTo(canvasEx1.width,i); ctx1.stroke(); }
+            ctx1.strokeStyle = '#ccc'; ctx1.lineWidth = 1.5;
+            for(let i=0; i<=canvasEx1.width; i+=scaleX) { ctx1.beginPath(); ctx1.moveTo(i,0); ctx1.lineTo(i,canvasEx1.height); ctx1.stroke(); }
+            for(let i=0; i<=canvasEx1.height; i+=scaleY) { ctx1.beginPath(); ctx1.moveTo(0,i); ctx1.lineTo(canvasEx1.width,i); ctx1.stroke(); }
+
+            ctx1.strokeStyle = 'black'; ctx1.lineWidth = 2;
+            ctx1.beginPath(); ctx1.moveTo(0, oY); ctx1.lineTo(canvasEx1.width, oY); ctx1.stroke();
+            ctx1.beginPath(); ctx1.moveTo(oX, 0); ctx1.lineTo(oX, canvasEx1.height); ctx1.stroke();
+
+            ctx1.font = "10px Arial"; ctx1.fillStyle = "black";
+            for(let x=-4; x<=4; x++) { if(x!==0) ctx1.fillText(x, oX + x*scaleX - 4, oY + 12); }
+            for(let y=-5; y<=8; y++) { if(y!==0) ctx1.fillText(y, oX + 6, oY - y*scaleY + 4); }
+            ctx1.fillText("0", oX - 10, oY + 12);
+
+            ctx1.strokeStyle = '#e74c3c'; ctx1.lineWidth = 2; ctx1.beginPath(); let first = true;
+            for(let px=0; px<=canvasEx1.width; px++) {
+                let x = (px - oX) / scaleX; let y = c.eval_f(x); let py = oY - y * scaleY;
+                if(py >= -100 && py <= canvasEx1.height+100) { if(first) { ctx1.moveTo(px, py); first = false; } else { ctx1.lineTo(px, py); } } else { first = true; }
+            }
+            ctx1.stroke();
+            ctx1.fillStyle = '#e74c3c'; ctx1.font="16px Arial"; ctx1.fillText("Cf", oX + 2*scaleX, oY - c.eval_f(2)*scaleY - 10);
+
+            document.getElementById('exo1-suite').innerHTML = `<p>On donne : $$f\\left(${c.pt1.x}\\right) = ${c.pt1.y_txt} \\qquad f\\left(${c.pt2.x}\\right) = ${c.pt2.y_txt} \\qquad f\\left(${c.pt3.x}\\right) = ${c.pt3.y_txt}$$</p><ol start="4"><li>Déterminer les équations réduites des tangentes à la courbe $\\mathcal{C}_f$ aux points d'abscisses $${c.pt1.x}$ et $${c.pt3.x}$. Aucune justification n'est demandée.</li><p>On considère maintenant la droite $\\Delta$ tangente à la courbe $\\mathcal{C}_f$ au point d'abscisse $${c.pt2.x}$.</p><li>Déterminer l'équation réduite de $\\Delta$.</li><li>Tracer avec précision $\\Delta$ sur le graphique ci-dessus.</li></ol>`;
+        }
+
+        function generateExo2() {
+            // Banque de contextes pour l'exercice 2 (Suites)
+            const banquesExo2 = [
+                {
+                    intro: (v, t) => `Madame Martin souhaite placer un capital de ${v} € sur un compte.<br>Son banquier lui conseille un placement à ${t}\% par an, à intérêts composés.`,
+                    lettre: "C", unit: " €", objType: "disposera de", description: "le capital accumulé"
+                },
+                {
+                    intro: (v, t) => `Une petite ville compte ${v} habitants. Une étude démographique prévoit que la population de la ville va augmenter de ${t}\% chaque année.`,
+                    lettre: "P", unit: " habitants", objType: "dépassera", description: "le nombre d'habitants"
+                },
+                {
+                    intro: (v, t) => `Un créateur de contenu possède ${v} abonnés sur sa chaîne. Il estime que grâce à son travail, son audience va croître de ${t}\% par an.`,
+                    lettre: "A", unit: " abonnés", objType: "atteindra", description: "le nombre d'abonnés"
+                }
+            ];
+
+            const ctx = banquesExo2[rand(0, 2)];
+            const valInit = rand(8, 20) * 100;
+            const taux = rand(2, 6);
+            const anneeCible = rand(6, 12);
+            const obj = Math.floor(valInit * Math.pow(1 + taux/100, anneeCible));
+            const V = ctx.lettre;
+
+            document.getElementById('exo2-texte').innerHTML = `
+                <p>${ctx.intro(valInit, taux)}</p>
+                <p>On note $${V}_n$ ${ctx.description} au bout de $n$ années. Ainsi $${V}_0 = ${valInit}$.</p>
+                <ol>
+                    <li>Calculer $${V}_1$ et $${V}_2$ (donner les valeurs exactes).</li>
+                    <li>Donner l'expression de $${V}_{n+1}$ en fonction de $${V}_n$.</li>
+                    <li>
+                        <ol type="a">
+                            <li>Calculer $${V}_7$ (écrivez simplement le calcul).</li>
+                            <li>Que représente cette valeur dans le contexte de l'exercice ?</li>
+                        </ol>
+                    </li>
+                    <li>On souhaite savoir au bout de combien d'années la valeur ${ctx.objType} ${obj}${ctx.unit}.<br>
+                    Compléter l'algorithme Python ci-dessous :</li>
+                </ol>
+                <div class="python-code">
+${V} = ${valInit}<br>
+N = 0<br>
+while ........................ :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;N = N + 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;${V} = ......................<br>
+return(N)
+                </div>`;
+        }
+
+        function generateExo3() {
+            // Banque de contextes pour l'exercice 3 (Probabilités)
+            const banquesExo3 = [
+                {
+                    pop: "salariés d'une entreprise",
+                    cat1: "Cadres", cat2: "Employés",
+                    prop1: "Parlent anglais", prop2: "Ne parlent pas anglais",
+                    varC1: "C", varC2: "E", varP1: "A",
+                    defC1: "le salarié interrogé est un cadre", defC2: "le salarié interrogé est un employé",
+                    defP1: "le salarié interrogé parle anglais", defP2: "le salarié interrogé ne parle pas anglais",
+                    phraseC1: "des cadres", phraseP1: "parlent anglais",
+                    interroge: "un salarié", pronom: "il"
+                },
+                {
+                    pop: "élèves d'un lycée",
+                    cat1: "Filles", cat2: "Garçons",
+                    prop1: "Pratiquent un sport", prop2: "Ne pratiquent aucun sport",
+                    varC1: "F", varC2: "G", varP1: "S",
+                    defC1: "l'élève interrogé est une fille", defC2: "l'élève interrogé est un garçon",
+                    defP1: "l'élève interrogé pratique un sport", defP2: "l'élève interrogé ne pratique aucun sport",
+                    phraseC1: "des filles", phraseP1: "pratiquent un sport",
+                    interroge: "un élève", pronom: "il"
+                },
+                {
+                    pop: "pièces produites par une usine",
+                    cat1: "Atelier 1", cat2: "Atelier 2",
+                    prop1: "Ont un défaut", prop2: "N'ont aucun défaut",
+                    varC1: "U", varC2: "D", varP1: "F",
+                    defC1: "la pièce provient de l'atelier 1", defC2: "la pièce provient de l'atelier 2",
+                    defP1: "la pièce a un défaut", defP2: "la pièce n'a aucun défaut",
+                    phraseC1: "des pièces de l'atelier 1", phraseP1: "ont un défaut",
+                    interroge: "une pièce", pronom: "elle"
+                }
+            ];
+
+            const ctx = banquesExo3[rand(0, 2)];
+            const tot = rand(100, 250); 
+            const nC1 = Math.floor(tot * rand(30, 45) / 100); 
+            const nC2 = tot - nC1;
+            const nP1_C1 = Math.floor(nC1 * rand(20, 70) / 100); 
+            const nP1_C2 = Math.floor(nC2 * rand(10, 30) / 100);
+
+            document.getElementById('exo3-texte').innerHTML = `
+                <p>Les ${tot} ${ctx.pop} se répartissent de la façon suivante :</p>
+                <table class="table-probas">
+                    <tr><th></th><th>${ctx.cat1}</th><th>${ctx.cat2}</th><th>TOTAL</th></tr>
+                    <tr><th>${ctx.prop1}</th><td>${nP1_C1}</td><td>${nP1_C2}</td><td>${nP1_C1 + nP1_C2}</td></tr>
+                    <tr><th>${ctx.prop2}</th><td>${nC1 - nP1_C1}</td><td>${nC2 - nP1_C2}</td><td>${tot - (nP1_C1 + nP1_C2)}</td></tr>
+                    <tr><th>TOTAL</th><td>${nC1}</td><td>${nC2}</td><td>${tot}</td></tr>
+                </table>
+                <p>Dans cet exercice, les résultats seront donnés sous forme fractionnaire.</p>
+                <ol>
+                    <li>
+                        <ol type="a">
+                            <li>Calculer la fréquence de la catégorie « ${ctx.cat2} » avec la propriété « ${ctx.prop1} ».</li>
+                            <li>Calculer la fréquence de ceux de la catégorie « ${ctx.prop2} » parmi la catégorie « ${ctx.cat1} ».</li>
+                        </ol>
+                    </li>
+                    <li>On tire au sort ${ctx.interroge} au hasard. On note les événements :<br>
+                    $${ctx.varC1}$ : « ${ctx.defC1} » ;<br>
+                    $${ctx.varC2}$ : « ${ctx.defC2} » ;<br>
+                    $${ctx.varP1}$ : « ${ctx.defP1} » ;<br>
+                    $\\overline{${ctx.varP1}}$ : « ${ctx.defP2} ».<br>
+                        <ol type="a">
+                            <li>Traduire par une phrase $${ctx.varC1} \\cap \\overline{${ctx.varP1}}$.</li>
+                            <li>Calculer $P(${ctx.varC1} \\cap ${ctx.varP1})$, $P(\\overline{${ctx.varP1}})$ et $P(${ctx.varC2} \\cap ${ctx.varP1})$.</li>
+                            <li>Calculer $P_{${ctx.varP1}}(${ctx.varC2})$.</li>
+                            <li>Sachant que ${ctx.interroge} appartient à la catégorie ${ctx.cat2}, calculer la probabilité qu'${ctx.pronom} vérifie la propriété « ${ctx.prop2} ».</li>
+                            <li>Définir à l'aide d'une probabilité : « ${Math.floor((nP1_C1/nC1)*100)}\% ${ctx.phraseC1} ${ctx.phraseP1} ».</li>
+                        </ol>
+                    </li>
+                    <li>Compléter l'arbre suivant avec les valeurs fractionnaires :</li>
+                </ol>`;
+
+            // --- ARBRE ---
+            const canvasTree = document.getElementById('canvas-tree');
+            const ctxT = canvasTree.getContext('2d');
+            ctxT.clearRect(0, 0, canvasTree.width, canvasTree.height);
+            const h = canvasTree.height;
+            ctxT.font = "18px Times New Roman"; ctxT.fillStyle = "black"; ctxT.textAlign = "center"; ctxT.textBaseline = "middle";
+
+            const pOmega = {x: 50, y: h/2}; 
+            const pC = {x: 200, y: h/4}; const pE = {x: 200, y: 3*h/4};
+            const pCA = {x: 400, y: h/8}; const pCAb = {x: 400, y: 3*h/8}; 
+            const pEA = {x: 400, y: 5*h/8}; const pEAb = {x: 400, y: 7*h/8};
+
+            ctxT.lineWidth = 1.5; ctxT.beginPath();
+            ctxT.moveTo(pOmega.x + 15, pOmega.y); ctxT.lineTo(pC.x - 15, pC.y);
+            ctxT.moveTo(pOmega.x + 15, pOmega.y); ctxT.lineTo(pE.x - 15, pE.y);
+            ctxT.moveTo(pC.x + 15, pC.y); ctxT.lineTo(pCA.x - 15, pCA.y);
+            ctxT.moveTo(pC.x + 15, pC.y); ctxT.lineTo(pCAb.x - 15, pCAb.y);
+            ctxT.moveTo(pE.x + 15, pE.y); ctxT.lineTo(pEA.x - 15, pEA.y);
+            ctxT.moveTo(pE.x + 15, pE.y); ctxT.lineTo(pEAb.x - 15, pEAb.y);
+            ctxT.stroke();
+
+            // Lettres dynamiques
+            ctxT.fillText("Ω", pOmega.x, pOmega.y); 
+            ctxT.fillText(ctx.varC1, pC.x, pC.y); 
+            ctxT.fillText(ctx.varC2, pE.x, pE.y);
+            ctxT.fillText(ctx.varP1, pCA.x, pCA.y); 
+            ctxT.fillText(ctx.varP1, pEA.x, pEA.y);
+            
+            ctxT.fillText(ctx.varP1, pCAb.x, pCAb.y); 
+            ctxT.beginPath(); ctxT.moveTo(pCAb.x-7, pCAb.y-12); ctxT.lineTo(pCAb.x+7, pCAb.y-12); ctxT.stroke();
+            
+            ctxT.fillText(ctx.varP1, pEAb.x, pEAb.y); 
+            ctxT.beginPath(); ctxT.moveTo(pEAb.x-7, pEAb.y-12); ctxT.lineTo(pEAb.x+7, pEAb.y-12); ctxT.stroke();
+
+            ctxT.font = "italic 16px Times New Roman";
+            ctxT.fillText("...", (pOmega.x + pC.x)/2, (pOmega.y + pC.y)/2 - 15); ctxT.fillText("...", (pOmega.x + pE.x)/2, (pOmega.y + pE.y)/2 + 15);
+            ctxT.fillText("...", (pC.x + pCA.x)/2, (pC.y + pCA.y)/2 - 10); ctxT.fillText("...", (pC.x + pCAb.x)/2, (pC.y + pCAb.y)/2 + 15);
+            ctxT.fillText("...", (pE.x + pEA.x)/2, (pE.y + pEA.y)/2 - 10); ctxT.fillText("...", (pE.x + pEAb.x)/2, (pE.y + pEAb.y)/2 + 15);
+        }
+
+        window.onload = generateExam;
+
+    </script>
+</body>
+</html>
