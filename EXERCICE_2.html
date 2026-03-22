@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAC BLANC - EXERCICE 2 AVEC CORRECTIONS</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                packages: {'[+]': ['ams']}
+            },
+            startup: {
+                typeset: false
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --page-bg: #ffffff;
+            --text-color: #000000;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-regenerate {
+            background-color: #2c3e50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .btn-regenerate:hover { background-color: #1a252f; }
+        
+        .btn-corr {
+            background-color: #27ae60;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 11pt;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-left: 15px;
+            font-family: Arial, sans-serif;
+            vertical-align: middle;
+        }
+        .btn-corr:hover { background-color: #2ecc71; }
+
+        .page {
+            background-color: var(--page-bg);
+            max-width: 21cm;
+            margin: 0 auto 20px auto;
+            padding: 2cm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .text-center { text-align: center; }
+        .title-lycee { font-size: 18pt; font-weight: bold; margin-bottom: 2cm; }
+        .student-info { margin-bottom: 2cm; line-height: 2; }
+        .exam-title { font-size: 24pt; font-weight: bold; margin: 1cm 0; }
+        .section-title { font-size: 14pt; font-weight: bold; margin-top: 1.5cm; margin-bottom: 0.5cm; }
+        
+        .python-code {
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            width: fit-content;
+            margin: 20px auto;
+            text-align: left;
+            font-size: 14pt;
+        }
+
+        /* Styles pour la modale (Popup) */
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            background-color: rgba(0,0,0,0.6); 
+            backdrop-filter: blur(3px);
+        }
+        .modal-content {
+            background-color: #ffffff;
+            margin: 5% auto; 
+            padding: 30px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 700px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            font-family: 'Arial', sans-serif;
+            font-size: 12pt;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; }
+        .corr-title {
+            color: #2980b9;
+            border-bottom: 2px solid #2980b9;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-weight: bold;
+            font-size: 16pt;
+        }
+        .pedagogy-box {
+            background-color: #e8f4f8;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            font-size: 11pt;
+        }
+        .pedagogy-box strong { color: #2980b9; }
+        .chain-container { overflow-x: auto; text-align: center; padding: 15px 0; }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .controls, .btn-corr, .modal { display: none !important; }
+            .page { box-shadow: none; margin: 0; padding: 1.5cm; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn-regenerate" onclick="generateExam()">Générer une nouvelle version de l'exercice</button>
+    </div>
+
+    <div class="page">
+        <div class="text-center title-lycee">LYCÉE LÉONARD DE VINCI - SAINT-GERMAIN-EN-LAYE</div>
+        
+        <div class="student-info">
+            <strong>NOM :</strong> ................................................................................................<br>
+            <strong>PRÉNOM :</strong> ..........................................................................................<br>
+            <strong>CLASSE :</strong> ............................................................................................
+        </div>
+        
+        <div class="text-center">
+            <div style="font-size: 14pt;">STI2D / STL</div>
+            <div style="font-size: 14pt;" id="exam-date">25 MARS 2026</div>
+            <div class="exam-title">BAC BLANC DE MATHÉMATIQUES</div>
+            <div style="font-size: 18pt; font-weight: bold;">Exercice 2 : Suites numériques</div>
+        </div>
+
+        <div class="section-title">Exercice 2 (4 points)</div>
+        <div id="exo2-texte"></div>
+    </div>
+
+    <div id="correctionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="corr-title" id="corr-title">Correction</h2>
+            <div id="corr-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        
+        // Objet global pour stocker les données générées afin de les utiliser dans la correction
+        let exoData = {};
+
+        function generateExam() {
+            const mois = ["JANVIER", "FÉVRIER", "MARS", "AVRIL", "MAI"];
+            document.getElementById('exam-date').innerHTML = `${rand(10, 28)} ${mois[rand(0,4)]} 2026`;
+            generateExo2();
+            MathJax.typesetPromise();
+        }
+
+        function generateExo2() {
+            const banquesExo2 = [
+                {
+                    intro: (v, t) => `Madame Martin souhaite placer un capital de ${v} € sur un compte.<br>Son banquier lui conseille un placement à ${t}\% par an, à intérêts composés.`,
+                    lettre: "C", unit: "€", objType: "dépassera", description: "le capital accumulé", isDecimal: true
+                },
+                {
+                    intro: (v, t) => `Une petite ville compte ${v} habitants. Une étude démographique prévoit que la population de la ville va augmenter de ${t}\% chaque année.`,
+                    lettre: "P", unit: "habitants", objType: "dépassera", description: "le nombre d'habitants", isDecimal: false
+                },
+                {
+                    intro: (v, t) => `Un créateur de contenu possède ${v} abonnés sur sa chaîne. Il estime que grâce à son travail, son audience va croître de ${t}\% par an.`,
+                    lettre: "A", unit: "abonnés", objType: "atteindra", description: "le nombre d'abonnés", isDecimal: false
+                }
+            ];
+
+            const ctx = banquesExo2[rand(0, 2)];
+            const valInit = rand(8, 20) * 100;
+            const taux = rand(2, 6);
+            const anneeCible = rand(6, 12);
+            const nQ3 = rand(5, 15); // Génération aléatoire de l'indice pour la question 3
+            
+            // Calculs pour la correction
+            const q = 1 + taux/100;
+            const obj = Math.floor(valInit * Math.pow(q, anneeCible));
+            const V = ctx.lettre;
+            const q_str = q.toString().replace('.', ',');
+            const tauxDec_str = (taux/100).toString().replace('.', ',');
+            
+            const v1 = ctx.isDecimal ? (valInit * q).toFixed(2) : Math.round(valInit * q);
+            const v2 = ctx.isDecimal ? (valInit * q * q).toFixed(2) : Math.round(valInit * q * q);
+            const vQ3 = ctx.isDecimal ? (valInit * Math.pow(q, nQ3)).toFixed(2) : Math.round(valInit * Math.pow(q, nQ3));
+
+            // Sauvegarde des données pour les modales
+            exoData = { valInit, taux, tauxDec_str, q, q_str, obj, V, v1, v2, vQ3, nQ3, unit: ctx.unit, desc: ctx.description, isDecimal: ctx.isDecimal };
+
+            document.getElementById('exo2-texte').innerHTML = `
+                <p>${ctx.intro(valInit, taux)}</p>
+                <p>On note $${V}_n$ ${ctx.description} au bout de $n$ années. Ainsi $${V}_0 = ${valInit}$.</p>
+                <ol>
+                    <li style="margin-bottom: 15px;">Calculer $${V}_1$ et $${V}_2$ (donner les valeurs exactes ou arrondies à l'unité selon le contexte). 
+                        <button class="btn-corr" onclick="showModal(1)">Voir la correction</button>
+                    </li>
+                    <li style="margin-bottom: 15px;">Donner l'expression de $${V}_{n+1}$ en fonction de $${V}_n$. 
+                        <button class="btn-corr" onclick="showModal(2)">Voir la correction</button>
+                    </li>
+                    <li style="margin-bottom: 15px;">
+                        <ol type="a">
+                            <li style="margin-bottom: 10px;">Calculer $${V}_{${nQ3}}$ (écrivez simplement le calcul et le résultat).
+                                <button class="btn-corr" onclick="showModal('3a')">Voir la correction</button>
+                            </li>
+                            <li>Que représente cette valeur dans le contexte de l'exercice ?
+                                <button class="btn-corr" onclick="showModal('3b')">Voir la correction</button>
+                            </li>
+                        </ol>
+                    </li>
+                    <li style="margin-bottom: 15px;">On souhaite savoir au bout de combien d'années la valeur ${ctx.objType} ${obj} ${ctx.unit}.<br>
+                    Compléter l'algorithme Python ci-dessous :
+                        <button class="btn-corr" onclick="showModal(4)">Voir la correction</button>
+                    </li>
+                </ol>
+                <div class="python-code">
+${V} = ${valInit}<br>
+N = 0<br>
+while ........................ :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;N = N + 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;${V} = ......................<br>
+return(N)
+                </div>`;
+        }
+
+        // Gestion de la modale
+        function showModal(questionId) {
+            const titleEl = document.getElementById('corr-title');
+            const contentEl = document.getElementById('corr-content');
+            let content = '';
+
+            // Raccourcis des variables
+            const { valInit, taux, tauxDec_str, q, q_str, obj, V, v1, v2, vQ3, nQ3, unit, desc, isDecimal } = exoData;
+            const arrondi_txt = isDecimal ? "au centime près (deux décimales)" : "à l'entier près";
+
+            if (questionId === 1) {
+                titleEl.innerText = "Correction - Question 1";
+                content = `
+                    <div class="pedagogy-box">
+                        <strong>Règle fondamentale :</strong> Augmenter une quantité de $t \\%$ revient à la multiplier par le <strong>coefficient multiplicateur</strong> : $CM = 1 + \\dfrac{t}{100}$.<br>
+                        <strong>Méthode :</strong> Pour calculer le terme suivant, on prend la valeur actuelle et on applique ce multiplicateur.
+                    </div>
+                    <p>Ici, l'augmentation est de $${taux}\\%,$ le coefficient multiplicateur est donc :<br>
+                    $CM = 1 + \\dfrac{${taux}}{100} = ${q_str}$</p>
+                    <p>On calcule $${V}_1$ en multipliant $${V}_0$ par ce coefficient :<br>
+                    $${V}_1 = ${V}_0 \\times ${q_str} = ${valInit} \\times ${q_str} = \\mathbf{${v1.toString().replace('.', ',')}}$</p>
+                    <p>On calcule $${V}_2$ en multipliant $${V}_1$ par ce même coefficient :<br>
+                    $${V}_2 = ${V}_1 \\times ${q_str} = ${v1.toString().replace('.', ',')} \\times ${q_str} = \\mathbf{${v2.toString().replace('.', ',')}}$</p>
+                    <p><em>Note : Les résultats sont donnés ${arrondi_txt} par cohérence avec l'énoncé.</em></p>
+                `;
+            } 
+            else if (questionId === 2) {
+                titleEl.innerText = "Correction - Question 2";
+                content = `
+                    <div class="pedagogy-box">
+                        <strong>Définition :</strong> Une suite est dite <strong>géométrique</strong> si l'on passe d'un terme au suivant en multipliant toujours par le même nombre réel $q$, appelé la raison.<br>
+                        <strong>Méthode :</strong> On traduit l'évolution d'une année sur l'autre par une addition, que l'on factorise pour trouver la formule de récurrence.
+                    </div>
+                    <p>$$${V}_{n+1} = ${V}_n + ${tauxDec_str} \\times ${V}_n$$</p>
+                    <p>donc $$${V}_{n+1} = \\left(1 + ${tauxDec_str}\\right) \\times ${V}_n$$</p>
+                    <p>Finalement $$${V}_{n+1} = ${q_str} \\times ${V}_n$$</p>
+                `;
+            }
+            else if (questionId === '3a') {
+                titleEl.innerText = "Correction - Question 3.a";
+                
+                // Construction dynamique de la chaîne de Markov selon nQ3
+                let chainGraphic = `$$${V}_0`;
+                for(let i = 1; i <= nQ3; i++) {
+                    chainGraphic += ` \\xrightarrow{\\times q} ${V}_{${i}}`;
+                }
+                chainGraphic += `$$`;
+
+                content = `
+                    <div class="pedagogy-box">
+                        <strong>Méthode :</strong> En appliquant la formule de récurrence d'une année sur l'autre, multiplier successivement par le coefficient multiplicateur $q$ permet de passer du terme initial à n'importe quel terme de la suite.
+                    </div>
+                    <p>Voici le graphe (ou la chaîne) représentant l'évolution de la suite depuis l'indice initial $n=0$ jusqu'à l'indice $n=${nQ3}$ :</p>
+                    
+                    <div class="chain-container">
+                        ${chainGraphic}
+                    </div>
+
+                    <p>Au lieu de calculer toutes les valeurs intermédiaires, on constate qu'on a multiplié ${nQ3} fois de suite par la raison $q$, ce qui se résume par le saut direct :</p>
+                    
+                    <div class="chain-container" style="padding: 0;">
+                        $$${V}_0 \\xrightarrow{\\times q^{${nQ3}}} ${V}_{${nQ3}}$$
+                    </div>
+
+                    <p>Pour calculer $${V}_{${nQ3}}$, on applique donc le coefficient multiplicateur $q = ${q_str}$ à la puissance ${nQ3} sur la valeur de départ $${V}_0$ :</p>
+                    <p>$$${V}_{${nQ3}} = ${V}_0 \\times (${q_str})^{${nQ3}}$$</p>
+                    <p>$$${V}_{${nQ3}} = ${valInit} \\times (${q_str})^{${nQ3}} \\approx \\mathbf{${vQ3.toString().replace('.', ',')}}$$</p>
+                `;
+            }
+            else if (questionId === '3b') {
+                titleEl.innerText = "Correction - Question 3.b";
+                content = `
+                    <div class="pedagogy-box">
+                        <strong>Méthode :</strong> Il faut toujours relier le résultat mathématique au contexte concret de l'énoncé. L'indice $n$ représente le temps écoulé, et $${V}_n$ représente la quantité mesurée.
+                    </div>
+                    <p>L'indice $n=${nQ3}$ correspond à <strong>${nQ3} années</strong> après l'année initiale.</p>
+                    <p>La valeur trouvée ($${vQ3.toString().replace('.', ',')}$) représente donc <strong>${desc}</strong> au bout de ${nQ3} ans.</p>
+                `;
+            }
+            else if (questionId === 4) {
+                titleEl.innerText = "Correction - Question 4";
+                content = `
+                    <div class="pedagogy-box">
+                        <strong>Méthode algorithmique (Boucle Tant Que) :</strong> <br>
+                        1. La boucle <code>while</code> (tant que) permet de répéter une action tant qu'une condition est VRAIE. Si on veut s'arrêter quand on dépasse un objectif, on doit continuer la boucle <em>tant qu'on est en dessous</em> de cet objectif.<br>
+                        2. À l'intérieur de la boucle, il faut traduire la formule de récurrence mathématique ($${V}_{n+1} = ${V}_n \\times q$) en instruction informatique d'affectation.
+                    </div>
+                    <p><strong>Ligne 3 :</strong> On cherche à dépasser ${obj}. La boucle doit donc tourner tant que la variable $${V}$ est strictement inférieure à ${obj}.<br>
+                    👉 <code>while ${V} < ${obj} :</code></p>
+                    
+                    <p><strong>Ligne 5 :</strong> Chaque année, la nouvelle valeur de $${V}$ devient l'ancienne valeur multipliée par le coefficient $${q_str}$.<br>
+                    👉 <code>${V} = ${V} * ${q_str}</code></p>
+
+                    <div class="python-code" style="font-size: 12pt; margin-top:15px;">
+${V} = ${valInit}<br>
+N = 0<br>
+while <strong>${V} < ${obj}</strong> :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;N = N + 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<strong>${V} = ${V} * ${q_str}</strong><br>
+return(N)
+                    </div>
+                `;
+            }
+
+            contentEl.innerHTML = content;
+            document.getElementById('correctionModal').style.display = 'block';
+            
+            // Demande à MathJax de formater les nouvelles formules injectées
+            MathJax.typesetPromise([contentEl]);
+        }
+
+        function closeModal() {
+            document.getElementById('correctionModal').style.display = 'none';
+        }
+
+        // Fermer la modale si on clique en dehors de la boîte
+        window.onclick = function(event) {
+            const modal = document.getElementById('correctionModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        window.onload = generateExam;
+    </script>
+</body>
+</html>
