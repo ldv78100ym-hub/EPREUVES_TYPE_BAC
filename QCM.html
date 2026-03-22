@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QCM DE MATHÉMATIQUES</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['\\(', '\\)']],
+                displayMath: [['\\[', '\\]']]
+            },
+            startup: {
+                pageReady: () => {
+                    generateQCM();
+                    return MathJax.startup.defaultPageReady();
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --page-bg: #ffffff;
+            --text-color: #000000;
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-regenerate {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background-color 0.3s;
+        }
+        .btn-regenerate:hover { background-color: #1a252f; }
+        
+        .page {
+            background-color: var(--page-bg);
+            max-width: 21cm;
+            margin: 0 auto 20px auto;
+            padding: 2cm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .page-break { page-break-after: always; }
+        .section-title { font-size: 14pt; font-weight: bold; margin-top: 0.5cm; margin-bottom: 0.5cm; }
+        .qcm-options { display: flex; justify-content: space-between; margin-top: 10px; margin-bottom: 10px; }
+        .qcm-options span { flex: 1; }
+        .canvas-container { text-align: center; margin: 20px 0; }
+        canvas { border: 1px solid transparent; }
+
+        .btn-solution {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            font-size: 10pt;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            float: right;
+        }
+        .btn-solution:hover { background-color: #2980b9; }
+        .question-container { margin-top: 20px; overflow: hidden; border-bottom: 1px dashed #ccc; padding-bottom: 15px; }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0;
+            top: 0;
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto; 
+            padding: 25px;
+            border: none;
+            width: 80%;
+            max-width: 700px;
+            border-radius: 8px;
+            font-family: Arial, sans-serif;
+            font-size: 11pt;
+            line-height: 1.6;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            position: relative;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: -10px;
+        }
+        .close-btn:hover, .close-btn:focus { color: #000; text-decoration: none; }
+        .sol-title { color: var(--primary-color); border-bottom: 2px solid var(--accent-color); padding-bottom: 5px; margin-bottom: 15px;}
+        .sol-methode { background-color: #e8f4f8; padding: 15px; border-left: 4px solid var(--accent-color); margin-bottom: 15px; border-radius: 0 4px 4px 0;}
+        .sol-letter { color: #27ae60; font-weight: bold; font-size: 1.1em; margin-top: 15px; padding-top: 10px; border-top: 1px dashed #ccc; }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .controls, .btn-solution, .modal { display: none !important; }
+            .page { box-shadow: none; margin: 0; padding: 1.5cm; max-width: 100%; border-bottom: none; }
+            .question-container { border-bottom: none; padding-bottom: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn-regenerate" onclick="generateExam()">Générer un nouveau QCM aléatoire</button>
+    </div>
+
+    <div class="page page-break">
+        <div class="section-title">AUTOMATISMES - QCM</div>
+        <p><em>Entourer clairement l'unique bonne réponse pour chaque question suivante :</em></p>
+        
+        <div id="qcm-part1"></div>
+    </div>
+
+    <div class="page">
+        <p>Soit le graphique suivant utile pour répondre aux questions 8 et 9.<br>
+        La courbe suivante est celle d'une fonction \\(f\\) définie sur \\([-3;4]\\).</p>
+        
+        <div class="canvas-container">
+            <canvas id="canvas-qcm" width="400" height="250"></canvas>
+        </div>
+        
+        <div id="qcm-part2"></div>
+    </div>
+
+    <div id="solutions-container" style="display: none;"></div>
+
+    <div id="solution-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeSolution()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        const shuffle = (array) => array.sort(() => Math.random() - 0.5);
+
+        function showSolution(solId) {
+            const solContent = document.getElementById(solId).innerHTML;
+            const modalBody = document.getElementById('modal-body');
+            modalBody.innerHTML = solContent;
+            document.getElementById('solution-modal').style.display = 'block';
+            
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetClear([modalBody]);
+                MathJax.typesetPromise([modalBody]).catch(err => console.error(err));
+            }
+        }
+
+        function closeSolution() { document.getElementById('solution-modal').style.display = 'none'; }
+        window.onclick = function(event) { if (event.target == document.getElementById('solution-modal')) closeSolution(); }
+
+        function generateExam() {
+            generateQCM();
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+                MathJax.typesetClear();
+                MathJax.typesetPromise().catch(err => console.error(err));
+            }
+        }
+
+        function generateQCM() {
+            let html1 = ''; let html2 = ''; let htmlSols = '';
+
+            // Q1
+            const denomQ1 = [4, 5, 6, 8, 10][rand(0, 4)];
+            const numQ1 = rand(1, denomQ1 - 1);
+            const totalQ1 = denomQ1 * rand(10, 80);
+            const repQ1 = (totalQ1 / denomQ1) * numQ1;
+            const ansQ1 = repQ1 + " kg";
+            const optsQ1 = shuffle([ansQ1, (totalQ1 / denomQ1) + " kg", (totalQ1 * numQ1) + " kg", (repQ1 + denomQ1 * 10) + " kg"]);
+            const letterQ1 = ['A', 'B', 'C', 'D'][optsQ1.indexOf(ansQ1)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 1</strong> \\(\\dfrac{${numQ1}}{${denomQ1}}\\) de ${totalQ1} kg est égal à :
+                    <button class="btn-solution" onclick="showSolution('sol-q1')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ1[0]}</span><span>B. ${optsQ1[1]}</span><span>C. ${optsQ1[2]}</span><span>D. ${optsQ1[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q1">
+                    <h3 class="sol-title">Solution - Question 1</h3>
+                    <div class="sol-methode">Pour calculer la fraction \\(\\dfrac{a}{b}\\) d'une quantité \\(Q\\), on divise \\(Q\\) par \\(b\\) puis on multiplie par \\(a\\).</div>
+                    <p>\\(${totalQ1} \\div ${denomQ1} = ${totalQ1 / denomQ1}\\)<br>\\(${totalQ1 / denomQ1} \\times ${numQ1} = \\mathbf{${repQ1}}\\) kg.</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ1}</strong>.</p>
+                </div>`;
+
+            // Q2
+            const p1 = rand(30, 60); const p2 = rand(2, 8);
+            const repQ2 = (p1 * p2) / 100;
+            const ansQ2 = repQ2.toString().replace('.',',') + "%";
+            const optsQ2 = shuffle([ansQ2, (p1+p2) + "%", (p1-p2) + "%", (repQ2*10).toString().replace('.',',') + "%"]);
+            const letterQ2 = ['A', 'B', 'C', 'D'][optsQ2.indexOf(ansQ2)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 2</strong> Dans une classe, ${p1}% des élèves sont des garçons et parmi eux, ${p2}% sont internes. Le pourcentage de garçons internes dans la classe est :
+                    <button class="btn-solution" onclick="showSolution('sol-q2')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ2[0]}</span><span>B. ${optsQ2[1]}</span><span>C. ${optsQ2[2]}</span><span>D. ${optsQ2[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q2">
+                    <h3 class="sol-title">Solution - Question 2</h3>
+                    <div class="sol-methode">Prendre \\(p_2\\%\\) d'une part représentant \\(p_1\\%\\) revient à multiplier les proportions : \\(\\dfrac{p_1}{100} \\times \\dfrac{p_2}{100}\\).</div>
+                    <p>\\(\\dfrac{${p1}}{100} \\times \\dfrac{${p2}}{100} = \\dfrac{${p1 * p2}}{10000} = \\dfrac{${repQ2}}{100}\\). Cela correspond à \\(\\mathbf{${repQ2.toString().replace('.',',')}\\%}\\).</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ2}</strong>.</p>
+                </div>`;
+
+            // Q3
+            const baisse = rand(12, 35);
+            const ansQ3 = (1 - baisse/100).toFixed(2).replace('.',',');
+            const optsQ3 = shuffle([ansQ3, (1 + baisse/100).toFixed(2).replace('.',','), (baisse/100).toFixed(2).replace('.',','), (1 - baisse/1000).toFixed(3).replace('.',',')]);
+            const letterQ3 = ['A', 'B', 'C', 'D'][optsQ3.indexOf(ansQ3)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 3</strong> Si une valeur diminue de ${baisse}%, alors elle est multipliée par...
+                    <button class="btn-solution" onclick="showSolution('sol-q3')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ3[0]}</span><span>B. ${optsQ3[1]}</span><span>C. ${optsQ3[2]}</span><span>D. ${optsQ3[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q3">
+                    <h3 class="sol-title">Solution - Question 3</h3>
+                    <div class="sol-methode">Pour une baisse de \\(t\\%\\) : \\(CM = 1 - \\dfrac{t}{100}\\).</div>
+                    <p>\\(CM = 1 - \\dfrac{${baisse}}{100} = 1 - 0,${baisse} = \\mathbf{${ansQ3}}\\).</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ3}</strong>.</p>
+                </div>`;
+
+            // Q4
+            const a = rand(2, 5); const b = rand(2, 4); const c = rand(3, 7); const d = rand(4, 9);
+            const numVrai = a * d - b * c;
+            const ansQ4 = `\\(\\dfrac{${numVrai}}{${d}}\\)`;
+            const optsQ4 = shuffle([ansQ4, `\\(\\dfrac{${(a-b)*c}}{${d}}\\)`, `\\(\\dfrac{${a*d + b*c}}{${d}}\\)`, `\\(\\dfrac{${numVrai + d}}{${d}}\\)`]);
+            const letterQ4 = ['A', 'B', 'C', 'D'][optsQ4.indexOf(ansQ4)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 4</strong> \\(${a} - ${b} \\times \\dfrac{${c}}{${d}} = ...\\)
+                    <button class="btn-solution" onclick="showSolution('sol-q4')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ4[0]}</span><span>B. ${optsQ4[1]}</span><span>C. ${optsQ4[2]}</span><span>D. ${optsQ4[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q4">
+                    <h3 class="sol-title">Solution - Question 4</h3>
+                    <div class="sol-methode">La multiplication est prioritaire. Ensuite, on met tout au même dénominateur.</div>
+                    <p>\\(${b} \\times \\dfrac{${c}}{${d}} = \\dfrac{${b*c}}{${d}}\\)<br>\\(${a} - \\dfrac{${b*c}}{${d}} = \\dfrac{${a*d}}{${d}} - \\dfrac{${b*c}}{${d}} = \\mathbf{\\dfrac{${numVrai}}{${d}}}\\)</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ4}</strong>.</p>
+                </div>`;
+
+            // Q5
+            const xa = rand(-5, -2); const ya = rand(1, 5);
+            const xb = rand(-1, 3); const yb = rand(-4, 0);
+            const m = (yb - ya) / (xb - xa);
+            const p = ya - m * xa;
+            let mStr = Number.isInteger(m) ? m : m.toFixed(1);
+            let pStr = Number.isInteger(p) ? p : p.toFixed(1);
+            let eqVraie = `y = ${mStr}x ${p >= 0 ? '+ '+pStr : '- '+Math.abs(pStr)}`;
+            const ansQ5 = `\\(${eqVraie}\\)`;
+            const optsQ5 = shuffle([ansQ5, `\\(y = ${mStr}x ${p >= 0 ? '- '+pStr : '+ '+Math.abs(pStr)}\\)`, `\\(y = ${pStr}x ${m >= 0 ? '+ '+mStr : '- '+Math.abs(mStr)}\\)`, `\\(y = ${(-mStr)}x ${p >= 0 ? '+ '+pStr : '- '+Math.abs(pStr)}\\)`]);
+            const letterQ5 = ['A', 'B', 'C', 'D'][optsQ5.indexOf(ansQ5)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 5</strong> On considère \\(A(${xa};${ya})\\) et \\(B(${xb};${yb})\\). L'équation réduite de (AB) est :
+                    <button class="btn-solution" onclick="showSolution('sol-q5')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ5[0]}</span><span>B. ${optsQ5[1]}</span><span>C. ${optsQ5[2]}</span><span>D. ${optsQ5[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q5">
+                    <h3 class="sol-title">Solution - Question 5</h3>
+                    <div class="sol-methode">Coefficient directeur \\(m = \\dfrac{y_B - y_A}{x_B - x_A}\\). Ordonnée à l'origine \\(p = y_A - m \\times x_A\\).</div>
+                    <p>\\(m = \\dfrac{${yb} - ${ya}}{${xb} - (${xa})} = ${mStr}\\)<br>\\(p = ${ya} - (${mStr}) \\times (${xa}) = ${pStr}\\)<br>L'équation est \\(\\mathbf{${eqVraie}}\\).</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ5}</strong>.</p>
+                </div>`;
+
+            // Q6
+            const d1 = rand(10, 40); const d2 = rand(10, 30);
+            const repQ6 = ((1 - d1/100) * (1 - d2/100)).toFixed(2).replace('.',',');
+            const ansQ6 = repQ6;
+            const optsQ6 = shuffle([ansQ6, (1 - (d1+d2)/100).toFixed(2).replace('.',','), ((1 + d1/100) * (1 - d2/100)).toFixed(2).replace('.',','), "0,5"]);
+            const letterQ6 = ['A', 'B', 'C', 'D'][optsQ6.indexOf(ansQ6)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 6</strong> Coefficient multiplicateur pour une diminution de ${d1}% suivie d'une diminution de ${d2}% ?
+                    <button class="btn-solution" onclick="showSolution('sol-q6')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ6[0]}</span><span>B. ${optsQ6[1]}</span><span>C. ${optsQ6[2]}</span><span>D. ${optsQ6[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q6">
+                    <h3 class="sol-title">Solution - Question 6</h3>
+                    <div class="sol-methode">Les pourcentages ne s'additionnent pas, on multiplie les coefficients multiplicateurs : \\(CM_{global} = CM_1 \\times CM_2\\).</div>
+                    <p>\\(CM_{global} = ${(1 - d1/100).toFixed(2).replace('.',',')} \\times ${(1 - d2/100).toFixed(2).replace('.',',')} = \\mathbf{${ansQ6}}\\).</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ6}</strong>.</p>
+                </div>`;
+
+            // Q7
+            const totG = rand(50, 90); const gA = rand(20, totG/2); const gB = rand(10, totG/4);
+            const ansQ7 = (totG - gA - gB).toString();
+            const optsQ7 = shuffle([ansQ7, (gA + gB).toString(), (totG - gA).toString(), (totG - gB).toString()]);
+            const letterQ7 = ['A', 'B', 'C', 'D'][optsQ7.indexOf(ansQ7)];
+            
+            html1 += `
+                <div class="question-container">
+                    <strong>Question 7</strong> Sur ${totG} personnes, groupe A: ${gA}, groupe B: ${gB}, groupe C: les autres. L'effectif du groupe C est :
+                    <button class="btn-solution" onclick="showSolution('sol-q7')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ7[0]}</span><span>B. ${optsQ7[1]}</span><span>C. ${optsQ7[2]}</span><span>D. ${optsQ7[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q7">
+                    <h3 class="sol-title">Solution - Question 7</h3>
+                    <div class="sol-methode">On soustrait les effectifs connus de l'effectif total.</div>
+                    <p>\\(${totG} - (${gA} + ${gB}) = \\mathbf{${ansQ7}}\\).</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ7}</strong>.</p>
+                </div>`;
+
+            document.getElementById('qcm-part1').innerHTML = html1;
+
+            // --- GRAPHIQUE QCM ---
+            const canvasQCM = document.getElementById('canvas-qcm');
+            const ctxQ = canvasQCM.getContext('2d');
+            ctxQ.clearRect(0, 0, canvasQCM.width, canvasQCM.height);
+            const unit = 40; const originX = 4 * unit; const originY = 3 * unit; 
+            
+            ctxQ.strokeStyle = '#ddd'; ctxQ.lineWidth = 1;
+            for(let i=0; i<=canvasQCM.width; i+=unit) { ctxQ.beginPath(); ctxQ.moveTo(i,0); ctxQ.lineTo(i,canvasQCM.height); ctxQ.stroke(); }
+            for(let i=0; i<=canvasQCM.height; i+=unit) { ctxQ.beginPath(); ctxQ.moveTo(0,i); ctxQ.lineTo(canvasQCM.width,i); ctxQ.stroke(); }
+            
+            ctxQ.strokeStyle = '#000'; ctxQ.lineWidth = 2;
+            ctxQ.beginPath(); ctxQ.moveTo(0, originY); ctxQ.lineTo(canvasQCM.width, originY); ctxQ.stroke();
+            ctxQ.beginPath(); ctxQ.moveTo(originX, 0); ctxQ.lineTo(originX, canvasQCM.height); ctxQ.stroke();
+            
+            ctxQ.font = "12px Arial"; ctxQ.fillStyle = "black";
+            for(let x=-3; x<=4; x++) { if(x!==0) ctxQ.fillText(x, originX + x*unit - 5, originY + 15); }
+            for(let y=-2; y<=2; y++) { if(y!==0) ctxQ.fillText(y, originX + 5, originY - y*unit + 5); }
+            ctxQ.fillText("0", originX - 12, originY + 15);
+
+            const pointsQCM = []; let y_current = rand(0, 2);
+            for(let x=-3; x<=4; x++) {
+                pointsQCM.push({x: x, y: y_current});
+                let step = rand(-2, 2);
+                if(y_current + step > 2) y_current -= 1; else if(y_current + step < -2) y_current += 1; else y_current += step;
+            }
+            
+            ctxQ.strokeStyle = 'blue'; ctxQ.lineWidth = 2; ctxQ.beginPath();
+            pointsQCM.forEach((pt, i) => {
+                let px = originX + pt.x * unit; let py = originY - pt.y * unit;
+                if(i===0) ctxQ.moveTo(px, py); else ctxQ.lineTo(px, py);
+            });
+            ctxQ.stroke();
+
+            const targetY = rand(-1, 1);
+
+            // Q8 Dynamique
+            let sols8 = [];
+            for (let i = 0; i < pointsQCM.length - 1; i++) {
+                let p1 = pointsQCM[i], p2 = pointsQCM[i + 1];
+                if (p1.y === targetY && !sols8.includes(p1.x)) sols8.push(p1.x);
+                if ((p1.y < targetY && p2.y > targetY) || (p1.y > targetY && p2.y < targetY)) sols8.push(p1.x + (targetY - p1.y) / (p2.y - p1.y));
+            }
+            if (pointsQCM[pointsQCM.length - 1].y === targetY && !sols8.includes(pointsQCM[pointsQCM.length - 1].x)) sols8.push(pointsQCM[pointsQCM.length - 1].x);
+            sols8.sort((a,b)=>a-b);
+            const ansQ8 = sols8.length === 0 ? "\\(S = \\emptyset\\)" : "\\(S = \\{" + sols8.map(x => Number.isInteger(x) ? x : x.toFixed(1).replace('.', ',')).join(' ; ') + "\\}\\)";
+            let fakes8 = ["\\(S = \\{-2 ; 1\\}\\)", "\\(S = \\{0 ; 3\\}\\)", "\\(S = \\emptyset\\)", "\\(S = \\{-1 ; 2 ; 4\\}\\)"];
+            fakes8 = fakes8.filter(f => f !== ansQ8).slice(0, 3);
+            const optsQ8 = shuffle([ansQ8, ...fakes8]);
+            const letterQ8 = ['A', 'B', 'C', 'D'][optsQ8.indexOf(ansQ8)];
+
+            html2 += `
+                <div class="question-container">
+                    <strong>Question 8</strong> L'équation \\(f(x) = ${targetY}\\) admet pour ensemble de solutions dans \\([-3;4]\\) :
+                    <button class="btn-solution" onclick="showSolution('sol-q8')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ8[0]}</span><span>B. ${optsQ8[1]}</span><span>C. ${optsQ8[2]}</span><span>D. ${optsQ8[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q8">
+                    <h3 class="sol-title">Solution - Question 8</h3>
+                    <div class="sol-methode">On trace la droite horizontale \\(y = ${targetY}\\) et on relève les <strong>abscisses</strong> des points d'intersection.</div>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ8}</strong>.</p>
+                </div>`;
+
+            // Q9 Dynamique
+            let intervals = []; let inInterval = false; let startX = null;
+            for(let x=-3; x<=4; x+=0.5) {
+                let y; let idx = Math.floor(x) + 3;
+                if (Number.isInteger(x)) { y = pointsQCM[idx].y; } else { y = (pointsQCM[idx].y + pointsQCM[idx+1].y)/2; }
+                if (y <= targetY + 0.01) {
+                    if (!inInterval) { inInterval = true; startX = x; }
+                } else {
+                    if (inInterval) { 
+                        inInterval = false; 
+                        let sx = Number.isInteger(startX)?startX:startX.toFixed(1).replace('.',',');
+                        let ex = Number.isInteger(x-0.5)?(x-0.5):(x-0.5).toFixed(1).replace('.',',');
+                        if(sx === ex) intervals.push(`\\{${sx}\\}`); else intervals.push(`[${sx};${ex}]`); 
+                    }
+                }
+            }
+            if (inInterval) { let sx = Number.isInteger(startX)?startX:startX.toFixed(1).replace('.',','); intervals.push(`[${sx};4]`); }
+            
+            const ansQ9 = intervals.length === 0 ? "\\(S = \\emptyset\\)" : "\\(S = " + intervals.join(' \\cup ') + "\\)";
+            let fakes9 = ["\\(S = [-3; -1] \\cup [1; 3]\\)", "\\(S = [-2; 0]\\)", "\\(S = \\emptyset\\)", "\\(S = [-1; 2]\\)"];
+            fakes9 = fakes9.filter(f => f !== ansQ9).slice(0, 3);
+            const optsQ9 = shuffle([ansQ9, ...fakes9]);
+            const letterQ9 = ['A', 'B', 'C', 'D'][optsQ9.indexOf(ansQ9)];
+
+            html2 += `
+                <div class="question-container">
+                    <strong>Question 9</strong> L'inéquation \\(f(x) \\le ${targetY}\\) admet pour solutions dans \\([-3;4]\\) :
+                    <button class="btn-solution" onclick="showSolution('sol-q9')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ9[0]}</span><span>B. ${optsQ9[1]}</span><span>C. ${optsQ9[2]}</span><span>D. ${optsQ9[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q9">
+                    <h3 class="sol-title">Solution - Question 9</h3>
+                    <div class="sol-methode">On repère la portion de courbe située <strong>en dessous ou sur</strong> la ligne \\(y = ${targetY}\\) et on lit les intervalles d'abscisses correspondants.</div>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ9}</strong>.</p>
+                </div>`;
+
+            // Q10
+            const q10_type = rand(0, 2);
+            let q10_text = ""; let optsQ10 = []; let sol_q10_text = ""; let ansQ10 = "";
+            if (q10_type === 0) {
+                const valA = rand(2, 15);
+                const unitesA = [{u: "m^2", f: 1}, {u: "dm^2", f: 100}, {u: "cm^2", f: 10000}, {u: "mm^2", f: 1000000}];
+                const fromIdx = rand(0, 2); const toIdx = fromIdx + 1; 
+                const ansA = valA * (unitesA[toIdx].f / unitesA[fromIdx].f);
+                q10_text = `\\(${valA} \\text{ } ${unitesA[fromIdx].u} = ...\\)`;
+                ansQ10 = `\\(${ansA} \\text{ } ${unitesA[toIdx].u}\\)`;
+                optsQ10 = shuffle([ ansQ10, `\\(${ansA / 10} \\text{ } ${unitesA[toIdx].u}\\)`, `\\(${ansA * 10} \\text{ } ${unitesA[toIdx].u}\\)`, `\\(${valA * 10} \\text{ } ${unitesA[toIdx].u}\\)` ]);
+                sol_q10_text = `<p>Conversion d'aires : Pour passer à l'unité inférieure, on multiplie par 100. Donc \\(\\mathbf{${ansQ10}}\\).</p>`;
+            } else if (q10_type === 1) {
+                const valV = rand(3, 12);
+                q10_text = `\\(${valV} \\text{ m}^3 = ...\\)`;
+                ansQ10 = `\\(${valV * 1000} \\text{ dm}^3\\)`;
+                optsQ10 = shuffle([ ansQ10, `\\(${valV * 100} \\text{ dm}^3\\)`, `\\(${valV * 10000} \\text{ dm}^3\\)`, `\\(${valV * 10} \\text{ dm}^3\\)` ]);
+                sol_q10_text = `<p>Conversion de volumes : Pour passer à l'unité inférieure, on multiplie par 1000. Donc \\(\\mathbf{${ansQ10}}\\).</p>`;
+            } else {
+                const valH = rand(2, 6); const mins = [15, 30, 45][rand(0, 2)];
+                const dec = mins === 15 ? 0.25 : (mins === 30 ? 0.5 : 0.75);
+                const ansH = valH + dec;
+                q10_text = `\\(${valH} \\text{ h } ${mins} \\text{ min} = ...\\)`;
+                ansQ10 = `\\(${ansH.toString().replace('.',',')} \\text{ h}\\)`;
+                optsQ10 = shuffle([ ansQ10, `\\(${valH},${mins} \\text{ h}\\)`, `\\(${(valH + 0.1).toString().replace('.',',')} \\text{ h}\\)`, `\\(${(ansH * 10).toString().replace('.',',')} \\text{ h}\\)` ]);
+                sol_q10_text = `<p>Le temps est en base 60. On divise les minutes par 60 : \\(\\dfrac{${mins}}{60} = ${dec}\\). Résultat : \\(\\mathbf{${ansQ10}}\\).</p>`;
+            }
+            const letterQ10 = ['A', 'B', 'C', 'D'][optsQ10.indexOf(ansQ10)];
+
+            html2 += `
+                <div class="question-container">
+                    <strong>Question 10</strong> ${q10_text}
+                    <button class="btn-solution" onclick="showSolution('sol-q10')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ10[0]}</span><span>B. ${optsQ10[1]}</span><span>C. ${optsQ10[2]}</span><span>D. ${optsQ10[3]}</span></div>
+                </div>`;
+            htmlSols += `<div id="sol-q10"><h3 class="sol-title">Solution - Question 10</h3>${sol_q10_text}<p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ10}</strong>.</p></div>`;
+
+            // Q11
+            const m1 = rand(3, 15); const p_exp = rand(3, 5); const p_target = p_exp + 1;
+            const resQ11 = m1 * rand(2, 5);
+            const ansQ11 = `\\(${resQ11/m1}x^{${p_exp}}\\)`;
+            const optsQ11 = shuffle([ansQ11, `\\(${resQ11/m1}x^{${p_target}}\\)`, `\\(${m1}x^{${p_exp}}\\)`, `\\(${resQ11}x\\)`]);
+            const letterQ11 = ['A', 'B', 'C', 'D'][optsQ11.indexOf(ansQ11)];
+            
+            html2 += `
+                <div class="question-container">
+                    <strong>Question 11</strong> Compléter : \\(${m1}x \\times ... = ${resQ11}x^{${p_target}}\\)
+                    <button class="btn-solution" onclick="showSolution('sol-q11')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ11[0]}</span><span>B. ${optsQ11[1]}</span><span>C. ${optsQ11[2]}</span><span>D. ${optsQ11[3]}</span></div>
+                </div>`;
+            htmlSols += `
+                <div id="sol-q11">
+                    <h3 class="sol-title">Solution - Question 11</h3>
+                    <div class="sol-methode">Pour trouver le terme manquant, on divise le résultat par le premier facteur.</div>
+                    <p>\\(\\dfrac{${resQ11}x^{${p_target}}}{${m1}x} = \\mathbf{${ansQ11}}\\).</p>
+                    <p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ11}</strong>.</p>
+                </div>`;
+
+            // Q12
+            const q12_type = rand(0, 2);
+            let q12_text = ""; let optsQ12 = []; let sol_q12_text = ""; let ansQ12 = "";
+            const vars = shuffle(['u', 'v', 'w', 'x', 'y', 'z', 'a', 'b', 'c', 'R', 'I', 'P']);
+            const v1 = vars[0], v2 = vars[1], v3 = vars[2];
+            const k = rand(2, 9);
+            
+            if (q12_type === 0) {
+                q12_text = `Si \\(${v1} = \\dfrac{${v2} + ${k}}{${v3}}\\), alors :`;
+                ansQ12 = `\\(${v3} = \\dfrac{${v2} + ${k}}{${v1}}\\)`;
+                optsQ12 = shuffle([ ansQ12, `\\(${v3} = ${v1}(${v2} + ${k})\\)`, `\\(${v3} = \\dfrac{${v1}}{${v2} + ${k}}\\)`, `\\(${v3} = ${v1} - ${v2} - ${k}\\)` ]);
+                sol_q12_text = `<p>En multipliant par \\(${v3}\\) de chaque côté puis en divisant par \\(${v1}\\), on obtient \\(\\mathbf{${ansQ12}}\\).</p>`;
+            } else if (q12_type === 1) {
+                q12_text = `Si \\(${v1} = ${v2}${v3} + ${k}\\), alors :`;
+                ansQ12 = `\\(${v3} = \\dfrac{${v1} - ${k}}{${v2}}\\)`;
+                optsQ12 = shuffle([ ansQ12, `\\(${v3} = \\dfrac{${v1}}{${v2}} - ${k}\\)`, `\\(${v3} = ${v1} - ${k} - ${v2}\\)`, `\\(${v3} = \\dfrac{${v1} + ${k}}{${v2}}\\)` ]);
+                sol_q12_text = `<p>On soustrait \\(${k}\\) puis on divise par le multiplicateur \\(${v2}\\), ce qui donne \\(\\mathbf{${ansQ12}}\\).</p>`;
+            } else {
+                q12_text = `Si \\(${v1} = \\dfrac{${v2}}{${v3} - ${k}}\\), alors :`;
+                ansQ12 = `\\(${v2} = ${v1}(${v3} - ${k})\\)`;
+                optsQ12 = shuffle([ ansQ12, `\\(${v2} = \\dfrac{${v1}}{${v3} - ${k}}\\)`, `\\(${v2} = ${v1}${v3} - ${k}\\)`, `\\(${v2} = \\dfrac{${v3} - ${k}}{${v1}}\\)` ]);
+                sol_q12_text = `<p>Pour isoler le numérateur, on multiplie tout par le dénominateur : \\(\\mathbf{${ansQ12}}\\).</p>`;
+            }
+            const letterQ12 = ['A', 'B', 'C', 'D'][optsQ12.indexOf(ansQ12)];
+
+            html2 += `
+                <div class="question-container">
+                    <strong>Question 12</strong> ${q12_text}
+                    <button class="btn-solution" onclick="showSolution('sol-q12')">Solution</button><br>
+                    <div class="qcm-options"><span>A. ${optsQ12[0]}</span><span>B. ${optsQ12[1]}</span><span>C. ${optsQ12[2]}</span><span>D. ${optsQ12[3]}</span></div>
+                </div>`;
+            htmlSols += `<div id="sol-q12"><h3 class="sol-title">Solution - Question 12</h3>${sol_q12_text}<p class="sol-letter">➔ La bonne réponse est la réponse <strong>${letterQ12}</strong>.</p></div>`;
+
+            document.getElementById('qcm-part2').innerHTML = html2;
+            document.getElementById('solutions-container').innerHTML = htmlSols;
+        }
+
+    </script>
+</body>
+</html>
