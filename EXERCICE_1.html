@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BAC BLANC DE MATHÉMATIQUES - EXERCICE 1</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            startup: {
+                typeset: false
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f2f5;
+            --page-bg: #ffffff;
+            --text-color: #000000;
+            --primary-color: #2c3e50;
+            --secondary-color: #27ae60;
+        }
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .btn-regenerate {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: background 0.3s;
+        }
+        .btn-regenerate:hover { background-color: #1a252f; }
+        
+        .btn-solution {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 4px 10px;
+            font-size: 10pt;
+            cursor: pointer;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            margin-left: 10px;
+            vertical-align: middle;
+            transition: background 0.3s;
+        }
+        .btn-solution:hover { background-color: #219653; }
+
+        .page {
+            background-color: var(--page-bg);
+            max-width: 21cm;
+            margin: 0 auto 20px auto;
+            padding: 2cm;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .text-center { text-align: center; }
+        .title-lycee { font-size: 18pt; font-weight: bold; margin-bottom: 1.5cm; }
+        .section-title { font-size: 14pt; font-weight: bold; margin-top: 0.5cm; margin-bottom: 0.5cm; border-bottom: 1px solid black; padding-bottom: 5px; }
+        .canvas-container { text-align: center; margin: 20px 0; }
+        canvas { border: 1px solid transparent; }
+
+        .modal {
+            display: none; 
+            position: fixed; 
+            z-index: 1000; 
+            left: 0; 
+            top: 0; 
+            width: 100%; 
+            height: 100%; 
+            overflow: auto; 
+            background-color: rgba(0,0,0,0.6); 
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 80%;
+            max-width: 800px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            font-family: Arial, sans-serif;
+            font-size: 12pt;
+            position: relative;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover, .close-btn:focus { color: black; text-decoration: none; }
+        .solution-title {
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--secondary-color);
+            padding-bottom: 5px;
+            margin-top: 0;
+        }
+        .pedagogy-box {
+            background-color: #e8f5e9;
+            border-left: 4px solid var(--secondary-color);
+            padding: 10px;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        @media print {
+            body { background-color: white; padding: 0; }
+            .controls, .btn-solution { display: none; }
+            .page { box-shadow: none; margin: 0; padding: 1cm; max-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button class="btn-regenerate" onclick="generateExam()">Générer une nouvelle variante</button>
+    </div>
+
+    <div class="page">
+        <div class="text-center title-lycee">LYCÉE LÉONARD DE VINCI - SAINT-GERMAIN-EN-LAYE</div>
+        
+        <div class="text-center">
+            <div style="font-size: 14pt;">STI2D / STL - Mathématiques</div>
+            <div class="section-title">Exercice 1 (5 points) : Étude de fonction et tangentes</div>
+        </div>
+
+        <div id="exo1-texte"></div>
+        
+        <div class="canvas-container">
+            <canvas id="canvas-exo1" width="450" height="550"></canvas>
+        </div>
+        
+        <div id="exo1-suite"></div>
+    </div>
+
+    <div id="solutionModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+            <h2 class="solution-title">Correction détaillée</h2>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        const rand = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+        
+        let currentSolutions = {};
+
+        function formatNumber(num) {
+            return Number.isInteger(num) ? num.toString() : num.toFixed(2).replace('.', ',');
+        }
+
+        function generateSVGTree(f1, f2) {
+            let h = f1.length * f2.length * 45 + 20;
+            let svg = `<svg width="100%" height="${h}" viewBox="0 0 500 ${h}" style="max-width: 600px; margin: 15px auto; display: block; overflow: visible;">`;
+            
+            let x1 = 50, x2 = 200, x3 = 350;
+            let leafIndex = 0;
+            
+            svg += `<style>
+                .tree-text { font-family: 'Times New Roman', Times, serif; font-size: 16px; font-style: italic; font-weight: bold;}
+                .tree-line { stroke: #2c3e50; stroke-width: 1.5; }
+            </style>`;
+
+            for (let i = 0; i < f1.length; i++) {
+                let numChildren = f2.length;
+                let startLeaf = leafIndex;
+                let endLeaf = leafIndex + numChildren - 1;
+                
+                let y1_start = (h / (f1.length * f2.length)) * (startLeaf + 0.5);
+                let y1_end = (h / (f1.length * f2.length)) * (endLeaf + 0.5);
+                let y1 = (y1_start + y1_end) / 2;
+                
+                svg += `<text x="${x1}" y="${y1 + 5}" text-anchor="middle" class="tree-text">${f1[i]}</text>`;
+                
+                for (let j = 0; j < f2.length; j++) {
+                    let y2 = (h / (f1.length * f2.length)) * (leafIndex + 0.5);
+                    
+                    svg += `<line x1="${x1 + 30}" y1="${y1}" x2="${x2 - 30}" y2="${y2}" class="tree-line" />`;
+                    svg += `<text x="${x2}" y="${y2 + 5}" text-anchor="middle" class="tree-text">${f2[j]}</text>`;
+                    svg += `<line x1="${x2 + 30}" y1="${y2}" x2="${x3 - 10}" y2="${y2}" class="tree-line" />`;
+                    
+                    let prodText = `(${f1[i]})(${f2[j]})`;
+                    svg += `<text x="${x3}" y="${y2 + 5}" text-anchor="start" class="tree-text">${prodText}</text>`;
+                    
+                    leafIndex++;
+                }
+            }
+            svg += `</svg>`;
+            return svg;
+        }
+
+        function generateVariationTableSVG(c) {
+            let svg = `<svg width="100%" height="180" viewBox="0 0 700 180" style="max-width: 700px; margin: 15px auto; display: block; font-family: 'Times New Roman', Times, serif; font-size: 16px; overflow: visible;">`;
+            
+            // Flèche de fin
+            svg += `<defs>
+                <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                    <path d="M 0 2 L 8 5 L 0 8 z" fill="black" />
+                </marker>
+            </defs>`;
+
+            // Helper interne pour dessiner les fractions exactes
+            function drawVal(val, x, y) {
+                if (val.includes('/')) {
+                    let parts = val.split('/');
+                    let sign = '';
+                    if (parts[0].startsWith('-')) {
+                        sign = '-';
+                        parts[0] = parts[0].substring(1);
+                    }
+                    let res = "";
+                    if(sign === '-') {
+                        res += `<text x="${x - 14}" y="${y + 5}" text-anchor="middle" font-size="16">-</text>`;
+                    }
+                    res += `<text x="${x}" y="${y - 6}" text-anchor="middle" font-size="13">${parts[0]}</text>`;
+                    res += `<line x1="${x - 8}" y1="${y - 1}" x2="${x + 8}" y2="${y - 1}" stroke="black" stroke-width="1.2" />`;
+                    res += `<text x="${x}" y="${y + 12}" text-anchor="middle" font-size="13">${parts[1]}</text>`;
+                    return res;
+                } else {
+                    return `<text x="${x}" y="${y + 5}" text-anchor="middle">${val}</text>`;
+                }
+            }
+
+            svg += `<rect x="0" y="0" width="700" height="180" fill="none" stroke="black" stroke-width="1.5" />`;
+            svg += `<line x1="120" y1="0" x2="120" y2="180" stroke="black" stroke-width="1.5" />`;
+            svg += `<line x1="0" y1="40" x2="700" y2="40" stroke="black" stroke-width="1.5" />`;
+            svg += `<line x1="0" y1="80" x2="700" y2="80" stroke="black" stroke-width="1.5" />`;
+
+            svg += `<line x1="310" y1="40" x2="310" y2="180" stroke="black" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>`;
+            svg += `<line x1="500" y1="40" x2="500" y2="180" stroke="black" stroke-width="1" stroke-dasharray="4,4" opacity="0.6"/>`;
+
+            svg += `<text x="60" y="26" text-anchor="middle" font-weight="bold" font-style="italic">x</text>`;
+            svg += `<text x="150" y="26" text-anchor="middle">-\u221E</text>`;
+            svg += `<text x="310" y="26" text-anchor="middle">${c.pt1.x}</text>`;
+            svg += `<text x="500" y="26" text-anchor="middle">${c.pt3.x}</text>`;
+            svg += `<text x="660" y="26" text-anchor="middle">+\u221E</text>`;
+
+            svg += `<text x="60" y="66" text-anchor="middle" font-weight="bold" font-style="italic">f '(x)</text>`;
+            let s1 = c.a_val > 0 ? '+' : '-';
+            let s2 = c.a_val > 0 ? '-' : '+';
+            let s3 = c.a_val > 0 ? '+' : '-';
+            svg += `<text x="230" y="66" text-anchor="middle">${s1}</text>`;
+            svg += `<text x="310" y="66" text-anchor="middle">0</text>`;
+            svg += `<text x="405" y="66" text-anchor="middle">${s2}</text>`;
+            svg += `<text x="500" y="66" text-anchor="middle">0</text>`;
+            svg += `<text x="580" y="66" text-anchor="middle">${s3}</text>`;
+
+            svg += `<text x="60" y="135" text-anchor="middle" font-weight="bold" font-style="italic">f</text>`;
+
+            let y_high = 105;
+            let y_low = 155;
+            let lim_inf = c.a_val > 0 ? '-\u221E' : '+\u221E';
+            let lim_sup = c.a_val > 0 ? '+\u221E' : '-\u221E';
+            
+            // Intégration des valeurs EXACTES
+            let val1 = c.pt1.y_exact;
+            let val2 = c.pt3.y_exact;
+
+            if (c.a_val > 0) {
+                svg += `<text x="150" y="${y_low + 5}" text-anchor="middle">${lim_inf}</text>`;
+                svg += drawVal(val1, 310, y_high);
+                svg += drawVal(val2, 500, y_low);
+                svg += `<text x="660" y="${y_high + 5}" text-anchor="middle">${lim_sup}</text>`;
+
+                svg += `<line x1="170" y1="${y_low - 15}" x2="280" y2="${y_high + 15}" stroke="black" stroke-width="1.5" marker-end="url(#arrow)" />`;
+                svg += `<line x1="340" y1="${y_high + 15}" x2="470" y2="${y_low - 15}" stroke="black" stroke-width="1.5" marker-end="url(#arrow)" />`;
+                svg += `<line x1="530" y1="${y_low - 15}" x2="630" y2="${y_high + 15}" stroke="black" stroke-width="1.5" marker-end="url(#arrow)" />`;
+            } else {
+                svg += `<text x="150" y="${y_high + 5}" text-anchor="middle">${lim_inf}</text>`;
+                svg += drawVal(val1, 310, y_low);
+                svg += drawVal(val2, 500, y_high);
+                svg += `<text x="660" y="${y_low + 5}" text-anchor="middle">${lim_sup}</text>`;
+
+                svg += `<line x1="170" y1="${y_high + 15}" x2="280" y2="${y_low - 15}" stroke="black" stroke-width="1.5" marker-end="url(#arrow)" />`;
+                svg += `<line x1="340" y1="${y_low - 15}" x2="470" y2="${y_high + 15}" stroke="black" stroke-width="1.5" marker-end="url(#arrow)" />`;
+                svg += `<line x1="530" y1="${y_high + 15}" x2="630" y2="${y_low - 15}" stroke="black" stroke-width="1.5" marker-end="url(#arrow)" />`;
+            }
+
+            svg += `</svg>`;
+            return svg;
+        }
+
+        function generateExam() {
+            generateExo1();
+            if (window.MathJax) {
+                MathJax.typesetPromise();
+            }
+        }
+
+        function generateExo1() {
+            const fonctions = [
+                { txt_f: "\\dfrac{4}{3}x^3 - 6x^2 + 5x + 2", txt_fp: "(2x - 5)(2x - 1)", txt_fp_dev: "4x^2 - 12x + 5", a_val: 4, pt2_fp: -4, eval_f: (x) => 4/3*Math.pow(x,3) - 6*x*x + 5*x + 2, pt1: {x: "0,5", v: 0.5, y_txt: "3,17", y_exact: "19/6"}, pt2: {x: "1,5", v: 1.5, y_txt: "0,5", y_exact: "1/2"}, pt3: {x: "2,5", v: 2.5, y_txt: "-2,17", y_exact: "-13/6"}, coeff: {a: "\\dfrac{4}{3}", b: "-6", c: "5", d: "2"}, txt_brute: "3 \\times \\left(\\dfrac{4}{3}\\right)x^2 + 2 \\times (-6)x + (5)", f1_terms: ["2x", "-5"], f2_terms: ["2x", "-1"], dev_steps: "4x^2 - 2x - 10x + 5", tree_prelude: "" },
+                { txt_f: "\\dfrac{1}{3}x^3 - \\dfrac{1}{2}x^2 - 2x + 3", txt_fp: "(x + 1)(x - 2)", txt_fp_dev: "x^2 - x - 2", a_val: 1, pt2_fp: -2.25, eval_f: (x) => 1/3*Math.pow(x,3) - 0.5*x*x - 2*x + 3, pt1: {x: "-1", v: -1, y_txt: "4,17", y_exact: "25/6"}, pt2: {x: "0,5", v: 0.5, y_txt: "1,92", y_exact: "23/12"}, pt3: {x: "2", v: 2, y_txt: "-0,33", y_exact: "-1/3"}, coeff: {a: "\\dfrac{1}{3}", b: "-\\dfrac{1}{2}", c: "-2", d: "3"}, txt_brute: "3 \\times \\left(\\dfrac{1}{3}\\right)x^2 + 2 \\times \\left(-\\dfrac{1}{2}\\right)x + (-2)", f1_terms: ["x", "1"], f2_terms: ["x", "-2"], dev_steps: "x^2 - 2x + x - 2", tree_prelude: "" },
+                { txt_f: "x^3 - 3x^2 + 4", txt_fp: "3x(x - 2)", txt_fp_dev: "3x^2 - 6x", a_val: 3, pt2_fp: -3, eval_f: (x) => Math.pow(x,3) - 3*x*x + 4, pt1: {x: "0", v: 0, y_txt: "4", y_exact: "4"}, pt2: {x: "1", v: 1, y_txt: "2", y_exact: "2"}, pt3: {x: "2", v: 2, y_txt: "0", y_exact: "0"}, coeff: {a: "1", b: "-3", c: "0", d: "4"}, txt_brute: "3 \\times (1)x^2 + 2 \\times (-3)x + (0)", f1_terms: ["3x"], f2_terms: ["x", "-2"], dev_steps: "3x^2 - 6x", tree_prelude: "" },
+                { txt_f: "\\dfrac{1}{3}x^3 - x^2 - 3x + 5", txt_fp: "(x + 1)(x - 3)", txt_fp_dev: "x^2 - 2x - 3", a_val: 1, pt2_fp: -4, eval_f: (x) => (1/3)*Math.pow(x,3) - x*x - 3*x + 5, pt1: {x: "-1", v: -1, y_txt: "6,67", y_exact: "20/3"}, pt2: {x: "1", v: 1, y_txt: "1,33", y_exact: "4/3"}, pt3: {x: "3", v: 3, y_txt: "-4", y_exact: "-4"}, coeff: {a: "\\dfrac{1}{3}", b: "-1", c: "-3", d: "5"}, txt_brute: "3 \\times \\left(\\dfrac{1}{3}\\right)x^2 + 2 \\times (-1)x + (-3)", f1_terms: ["x", "1"], f2_terms: ["x", "-3"], dev_steps: "x^2 - 3x + x - 3", tree_prelude: "" },
+                { txt_f: "-x^3 + 3x + 2", txt_fp: "-3(x - 1)(x + 1)", txt_fp_dev: "-3x^2 + 3", a_val: -3, pt2_fp: 3, eval_f: (x) => -Math.pow(x,3) + 3*x + 2, pt1: {x: "-1", v: -1, y_txt: "0", y_exact: "0"}, pt2: {x: "0", v: 0, y_txt: "2", y_exact: "2"}, pt3: {x: "1", v: 1, y_txt: "4", y_exact: "4"}, coeff: {a: "-1", b: "0", c: "3", d: "2"}, txt_brute: "3 \\times (-1)x^2 + 2 \\times (0)x + (3)", f1_terms: ["-3x", "3"], f2_terms: ["x", "1"], dev_steps: "-3x^2 - 3x + 3x + 3", tree_prelude: "On intègre d'abord le coefficient $-3$ dans le premier facteur : $-3(x - 1) = -3x + 3$.<br>On développe ensuite $(-3x + 3)(x + 1)$ :" },
+                { txt_f: "2x^3 - 9x^2 + 12x - 2", txt_fp: "6(x - 1)(x - 2)", txt_fp_dev: "6x^2 - 18x + 12", a_val: 6, pt2_fp: -1.5, eval_f: (x) => 2*Math.pow(x,3) - 9*x*x + 12*x - 2, pt1: {x: "1", v: 1, y_txt: "3", y_exact: "3"}, pt2: {x: "1,5", v: 1.5, y_txt: "2,5", y_exact: "5/2"}, pt3: {x: "2", v: 2, y_txt: "2", y_exact: "2"}, coeff: {a: "2", b: "-9", c: "12", d: "-2"}, txt_brute: "3 \\times (2)x^2 + 2 \\times (-9)x + (12)", f1_terms: ["6x", "-6"], f2_terms: ["x", "-2"], dev_steps: "6x^2 - 12x - 6x + 12", tree_prelude: "On intègre d'abord le coefficient $6$ dans le premier facteur : $6(x - 1) = 6x - 6$.<br>On développe ensuite $(6x - 6)(x - 2)$ :" },
+                { txt_f: "\\dfrac{2}{3}x^3 - x^2 - 4x + 4", txt_fp: "2(x + 1)(x - 2)", txt_fp_dev: "2x^2 - 2x - 4", a_val: 2, pt2_fp: -4.5, eval_f: (x) => (2/3)*Math.pow(x,3) - x*x - 4*x + 4, pt1: {x: "-1", v: -1, y_txt: "6,33", y_exact: "19/3"}, pt2: {x: "0,5", v: 0.5, y_txt: "1,83", y_exact: "11/6"}, pt3: {x: "2", v: 2, y_txt: "-2,67", y_exact: "-8/3"}, coeff: {a: "\\dfrac{2}{3}", b: "-1", c: "-4", d: "4"}, txt_brute: "3 \\times \\left(\\dfrac{2}{3}\\right)x^2 + 2 \\times (-1)x + (-4)", f1_terms: ["2x", "2"], f2_terms: ["x", "-2"], dev_steps: "2x^2 - 4x + 2x - 4", tree_prelude: "On intègre d'abord le coefficient $2$ dans le premier facteur : $2(x + 1) = 2x + 2$.<br>On développe ensuite $(2x + 2)(x - 2)$ :" },
+                { txt_f: "-2x^3 + 3x^2 + 12x - 5", txt_fp: "-6(x + 1)(x - 2)", txt_fp_dev: "-6x^2 + 6x + 12", a_val: -6, pt2_fp: 13.5, eval_f: (x) => -2*Math.pow(x,3) + 3*x*x + 12*x - 5, pt1: {x: "-1", v: -1, y_txt: "-12", y_exact: "-12"}, pt2: {x: "0,5", v: 0.5, y_txt: "1,5", y_exact: "3/2"}, pt3: {x: "2", v: 2, y_txt: "15", y_exact: "15"}, coeff: {a: "-2", b: "3", c: "12", d: "-5"}, txt_brute: "3 \\times (-2)x^2 + 2 \\times (3)x + (12)", f1_terms: ["-6x", "-6"], f2_terms: ["x", "-2"], dev_steps: "-6x^2 + 12x - 6x + 12", tree_prelude: "On intègre d'abord le coefficient $-6$ dans le premier facteur : $-6(x + 1) = -6x - 6$.<br>On développe ensuite $(-6x - 6)(x - 2)$ :" },
+                { txt_f: "\\dfrac{1}{3}x^3 + x^2 - 3x + 2", txt_fp: "(x + 3)(x - 1)", txt_fp_dev: "x^2 + 2x - 3", a_val: 1, pt2_fp: -4, eval_f: (x) => (1/3)*Math.pow(x,3) + x*x - 3*x + 2, pt1: {x: "-3", v: -3, y_txt: "11", y_exact: "11"}, pt2: {x: "-1", v: -1, y_txt: "5,67", y_exact: "17/3"}, pt3: {x: "1", v: 1, y_txt: "0,33", y_exact: "1/3"}, coeff: {a: "\\dfrac{1}{3}", b: "1", c: "-3", d: "2"}, txt_brute: "3 \\times \\left(\\dfrac{1}{3}\\right)x^2 + 2 \\times (1)x + (-3)", f1_terms: ["x", "3"], f2_terms: ["x", "-1"], dev_steps: "x^2 - x + 3x - 3", tree_prelude: "" },
+                { txt_f: "x^3 - 6x^2 + 9x + 1", txt_fp: "3(x - 1)(x - 3)", txt_fp_dev: "3x^2 - 12x + 9", a_val: 3, pt2_fp: -3, eval_f: (x) => Math.pow(x,3) - 6*x*x + 9*x + 1, pt1: {x: "1", v: 1, y_txt: "5", y_exact: "5"}, pt2: {x: "2", v: 2, y_txt: "3", y_exact: "3"}, pt3: {x: "3", v: 3, y_txt: "1", y_exact: "1"}, coeff: {a: "1", b: "-6", c: "9", d: "1"}, txt_brute: "3 \\times (1)x^2 + 2 \\times (-6)x + (9)", f1_terms: ["3x", "-3"], f2_terms: ["x", "-3"], dev_steps: "3x^2 - 9x - 3x + 9", tree_prelude: "On intègre d'abord le coefficient $3$ dans le premier facteur : $3(x - 1) = 3x - 3$.<br>On développe ensuite $(3x - 3)(x - 3)$ :" }
+            ];
+            
+            const c = fonctions[rand(0, fonctions.length - 1)];
+
+            document.getElementById('exo1-texte').innerHTML = `
+                <p>On considère la fonction $f$ définie sur $\\mathbb{R}$ par : $$f(x) = ${c.txt_f}$$</p>
+                <ol>
+                    <li>Calculer $f'(x)$ et montrer qu'on peut l'écrire sous la forme : $$f'(x) = ${c.txt_fp}$$ <button class="btn-solution" onclick="openModal('q1')">💡 Solution</button></li>
+                    <li>
+                        <ol type="a">
+                            <li>Étudier le signe de $f'(x)$ sur $\\mathbb{R}$ en construisant son tableau de signe. <button class="btn-solution" onclick="openModal('q2a')">💡 Solution</button></li>
+                            <li>En déduire le tableau de variation de la fonction $f$ sur $\\mathbb{R}$. <button class="btn-solution" onclick="openModal('q2b')">💡 Solution</button></li>
+                        </ol>
+                    </li>
+                    <li>La courbe $\\mathcal{C}_f$ représentant la fonction $f$ est tracée ci-dessous :</li>
+                </ol>`;
+
+            const canvasEx1 = document.getElementById('canvas-exo1');
+            const ctx1 = canvasEx1.getContext('2d');
+            ctx1.clearRect(0, 0, canvasEx1.width, canvasEx1.height);
+            
+            const scaleX = 50, scaleY = 30; 
+            const oX = canvasEx1.width / 2; 
+            const oY = canvasEx1.height / 2;
+
+            ctx1.strokeStyle = '#f0f0f0'; ctx1.lineWidth = 1;
+            for(let i=0; i<=canvasEx1.width; i+=scaleX/2) { ctx1.beginPath(); ctx1.moveTo(i,0); ctx1.lineTo(i,canvasEx1.height); ctx1.stroke(); }
+            for(let i=0; i<=canvasEx1.height; i+=scaleY/2) { ctx1.beginPath(); ctx1.moveTo(0,i); ctx1.lineTo(canvasEx1.width,i); ctx1.stroke(); }
+            ctx1.strokeStyle = '#d0d0d0'; ctx1.lineWidth = 1.2;
+            for(let i=0; i<=canvasEx1.width; i+=scaleX) { ctx1.beginPath(); ctx1.moveTo(i,0); ctx1.lineTo(i,canvasEx1.height); ctx1.stroke(); }
+            for(let i=0; i<=canvasEx1.height; i+=scaleY) { ctx1.beginPath(); ctx1.moveTo(0,i); ctx1.lineTo(canvasEx1.width,i); ctx1.stroke(); }
+
+            ctx1.strokeStyle = 'black'; ctx1.lineWidth = 2;
+            ctx1.beginPath(); ctx1.moveTo(0, oY); ctx1.lineTo(canvasEx1.width, oY); ctx1.stroke();
+            ctx1.beginPath(); ctx1.moveTo(oX, 0); ctx1.lineTo(oX, canvasEx1.height); ctx1.stroke();
+
+            ctx1.font = "10px Arial"; ctx1.fillStyle = "black";
+            for(let x=-4; x<=4; x++) { if(x!==0) ctx1.fillText(x, oX + x*scaleX - 4, oY + 12); }
+            for(let y=-8; y<=8; y++) { if(y!==0) ctx1.fillText(y, oX + 6, oY - y*scaleY + 4); }
+            ctx1.fillText("0", oX - 10, oY + 12);
+
+            ctx1.strokeStyle = '#e74c3c'; ctx1.lineWidth = 2.5; ctx1.beginPath(); 
+            let first = true;
+            for(let px=0; px<=canvasEx1.width; px++) {
+                let x = (px - oX) / scaleX; 
+                let y = c.eval_f(x); 
+                let py = oY - y * scaleY;
+                if(py >= 0 && py <= canvasEx1.height) { 
+                    if(first) { ctx1.moveTo(px, py); first = false; } 
+                    else { ctx1.lineTo(px, py); } 
+                } else { first = true; }
+            }
+            ctx1.stroke();
+            ctx1.fillStyle = '#e74c3c'; ctx1.font="bold 14px Arial"; 
+            ctx1.fillText("Cf", canvasEx1.width - 30, oY - c.eval_f((canvasEx1.width/2 - 30)/scaleX)*scaleY - 10);
+
+            document.getElementById('exo1-suite').innerHTML = `
+                <p>On donne les valeurs approchées suivantes : <br>
+                $f(${c.pt1.x}) \\approx ${c.pt1.y_txt} \\quad f(${c.pt2.x}) \\approx ${c.pt2.y_txt} \\quad f(${c.pt3.x}) \\approx ${c.pt3.y_txt}$</p>
+                <ol start="4">
+                    <li>Déterminer les équations réduites des tangentes à la courbe $\\mathcal{C}_f$ aux points d'abscisses $${c.pt1.x}$ et $${c.pt3.x}$. <button class="btn-solution" onclick="openModal('q4')">💡 Solution</button></li>
+                    <li>Soit $\\Delta$ la tangente à $\\mathcal{C}_f$ au point d'abscisse $${c.pt2.x}$.
+                        <ol type="a">
+                            <li>Déterminer l'équation réduite de la droite $\\Delta$. <button class="btn-solution" onclick="openModal('q5a')">💡 Solution</button></li>
+                            <li>Tracer $\\Delta$ avec précision sur le repère ci-dessus. <button class="btn-solution" onclick="openModal('q5b')">💡 Solution</button></li>
+                        </ol>
+                    </li>
+                </ol>`;
+
+            const signeA = c.a_val > 0 ? "positif ($> 0$)" : "négatif ($< 0$)";
+            
+            const m = c.pt2_fp;
+            const x0 = c.pt2.v;
+            const y0 = c.eval_f(x0);
+            const p = y0 - (m * x0);
+            const p_txt = p >= 0 ? `+ ${formatNumber(p)}` : `- ${formatNumber(Math.abs(p))}`;
+
+            const tree_intro = c.tree_prelude ? '<p>' + c.tree_prelude + '</p>' : "<p>On développe l'expression à l'aide d'un arbre :</p>";
+
+            currentSolutions = {
+                'q1': `
+                    <p>$f$ est de la forme $ax^3+bx^2+cx+d$ avec $a = ${c.coeff.a}$, $b = ${c.coeff.b}$, $c = ${c.coeff.c}$ et $d = ${c.coeff.d}$ donc $f'$ est de la forme $3ax^2+2bx+c$.</p>
+                    <p>Donc $f'(x) = ${c.txt_brute}$.</p>
+                    <p>Finalement, $f'(x) = ${c.txt_fp_dev}$.</p>
+                    <p>Pour vérifier que cette expression correspond bien à $f'(x) = ${c.txt_fp}$, nous allons développer la forme factorisée.</p>
+                    ${tree_intro}
+                    ${generateSVGTree(c.f1_terms, c.f2_terms)}
+                    <p>En sommant les produits obtenus au bout de chaque branche, on obtient :</p>
+                    <p>$$${c.dev_steps} = ${c.txt_fp_dev}$$</p>
+                    <p><strong>Conclusion :</strong> On a bien $f'(x) = ${c.txt_fp}$.</p>
+                `,
+                'q2a': `
+                    <div class="pedagogy-box">
+                        <strong>Théorème : Signe d'un polynôme du second degré</strong><br>
+                        Un polynôme de la forme $ax^2 + bx + c$ ayant deux racines $x_1$ et $x_2$ est <strong>toujours du signe de "$a$" à l'extérieur de ses racines</strong>, et du signe opposé entre les racines.
+                    </div>
+                    <p>Nous savons que $f'(x) = ${c.txt_fp}$. Les valeurs qui annulent la dérivée (les racines) se lisent directement dans les facteurs ou se résolvent facilement : $x = ${c.pt1.x}$ et $x = ${c.pt3.x}$.</p>
+                    <p>Si on regarde la forme développée calculée à la question 1 ($f'(x) = ${c.txt_fp_dev}$), le coefficient dominant est $a = ${c.a_val}$.</p>
+                    <p>Ce coefficient $a$ est <strong>${signeA}</strong>. Le polynôme est donc ${c.a_val > 0 ? "positif à l'extérieur des racines et négatif entre elles" : "négatif à l'extérieur des racines et positif entre elles"}.</p>
+                    <table style="width: 100%; text-align: center; border-collapse: collapse; margin-top: 15px;">
+                        <tr>
+                            <td style="border-bottom: 1px solid black; border-right: 1px solid black; padding: 5px; width: 15%;"><b>$x$</b></td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;">$-\\infty$</td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;"></td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;">$${c.pt1.x}$</td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;"></td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;">$${c.pt3.x}$</td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;"></td>
+                            <td style="border-bottom: 1px solid black; padding: 5px;">$+\\infty$</td>
+                        </tr>
+                        <tr>
+                            <td style="border-right: 1px solid black; padding: 10px;"><b>Signe de $f'(x)$</b></td>
+                            <td></td>
+                            <td>${c.a_val > 0 ? '+' : '-'}</td>
+                            <td>$0$</td>
+                            <td>${c.a_val > 0 ? '-' : '+'}</td>
+                            <td>$0$</td>
+                            <td>${c.a_val > 0 ? '+' : '-'}</td>
+                            <td></td>
+                        </tr>
+                    </table>
+                `,
+                'q2b': `
+                    <div class="pedagogy-box">
+                        <strong>Propriété fondamentale :</strong><br>
+                        $\\bullet$ Si $f'(x) > 0$ sur un intervalle, alors la fonction $f$ est <strong>strictement croissante</strong> sur cet intervalle.<br>
+                        $\\bullet$ Si $f'(x) < 0$ sur un intervalle, alors la fonction $f$ est <strong>strictement décroissante</strong> sur cet intervalle.
+                    </div>
+                    <p>En nous appuyant sur le signe de $f'(x)$ trouvé à la question précédente, on dresse le tableau de variation avec les <strong>valeurs exactes</strong> des extremums locaux :</p>
+                    ${generateVariationTableSVG(c)}
+                `,
+                'q4': `
+                    <div class="pedagogy-box">
+                        <strong>Formule de l'équation d'une tangente :</strong><br>
+                        L'équation réduite de la tangente à la courbe représentative de $f$ au point d'abscisse $a$ est donnée par :<br>
+                        $$y = f'(a)(x - a) + f(a)$$
+                        <em>Astuce visuelle</em> : Si $f'(a) = 0$ (la dérivée s'annule), la tangente est parfaitement <strong>horizontale</strong>.
+                    </div>
+                    <p>On cherche les tangentes aux points d'abscisses $${c.pt1.x}$ et $${c.pt3.x}$.</p>
+                    <p>Or, nous avons vu dans le tableau de signe que <strong>la dérivée s'annule pour ces deux valeurs</strong> ! Ainsi, $f'(${c.pt1.x}) = 0$ et $f'(${c.pt3.x}) = 0$.</p>
+                    <p>Il n'y a donc aucun calcul complexe à faire. Les tangentes en ces points sont horizontales et ont pour équation $y = f(a)$.</p>
+                    <ul>
+                        <li>Pour $x = ${c.pt1.x}$ : l'équation est <strong>$y = ${c.pt1.y_txt}$</strong>.</li>
+                        <li>Pour $x = ${c.pt3.x}$ : l'équation est <strong>$y = ${c.pt3.y_txt}$</strong>.</li>
+                    </ul>
+                `,
+                'q5a': `
+                    <div class="pedagogy-box">
+                        <strong>Application de la formule :</strong><br>
+                        On utilise la formule de la tangente au point d'abscisse $a = ${c.pt2.x}$ :<br>
+                        $$y = f'(${c.pt2.x})(x - ${c.pt2.x}) + f(${c.pt2.x})$$
+                    </div>
+                    <p><strong>Étape 1 : Calculer $f(${c.pt2.x})$ (l'ordonnée)</strong><br>
+                    L'énoncé nous donne la valeur : $f(${c.pt2.x}) \\approx ${c.pt2.y_txt}$.</p>
+                    
+                    <p><strong>Étape 2 : Calculer le coefficient directeur $f'(${c.pt2.x})$</strong><br>
+                    On remplace $x$ par $${c.pt2.x}$ dans l'expression de la dérivée $f'(x) = ${c.txt_fp_dev}$.<br>
+                    $f'(${c.pt2.x}) = ${formatNumber(m)}$.</p>
+
+                    <p><strong>Étape 3 : Remplacer dans la formule</strong><br>
+                    $y = ${formatNumber(m)} (x - ${c.pt2.x}) + ${c.pt2.y_txt}$<br>
+                    On développe :<br>
+                    $y = ${formatNumber(m)}x - (${formatNumber(m)} \\times ${c.pt2.x}) + ${c.pt2.y_txt}$<br>
+                    $y = ${formatNumber(m)}x ${p_txt}$</p>
+                    <p>L'équation de la tangente $\\Delta$ est donc <strong>$y = ${formatNumber(m)}x ${p_txt}$</strong>.</p>
+                `,
+                'q5b': `
+                    <div class="pedagogy-box">
+                        <strong>Méthode pour tracer une droite $y = mx + p$ :</strong><br>
+                        Il faut deux points pour tracer une droite à la règle.<br>
+                        $\\bullet$ Le <strong>premier point</strong> est évident : c'est le point de tangence sur la courbe ! Ses coordonnées sont $(${c.pt2.x} \\;;\\; ${c.pt2.y_txt})$.<br>
+                        $\\bullet$ Le <strong>second point</strong> se trouve en utilisant l'ordonnée à l'origine $p$.
+                    </div>
+                    <p><strong>Pas à pas :</strong></p>
+                    <ol>
+                        <li>Placez le point $A(${c.pt2.x} \\;;\\; ${c.pt2.y_txt})$ sur la courbe $\\mathcal{C}_f$. C'est là que la tangente effleure la courbe.</li>
+                        <li>Utilisez l'ordonnée à l'origine trouvée à la question 5a. L'équation est $y = ${formatNumber(m)}x ${p_txt}$. Donc si $x = 0$, $y = ${formatNumber(p)}$. Placez ce point sur l'axe vertical (l'axe des ordonnées).</li>
+                        <li>Reliez ces deux points à la règle.</li>
+                    </ol>
+                `
+            };
+        }
+
+        function openModal(questionKey) {
+            const modal = document.getElementById("solutionModal");
+            const body = document.getElementById("modal-body");
+            
+            body.innerHTML = currentSolutions[questionKey];
+            modal.style.display = "block";
+            
+            if (window.MathJax) {
+                MathJax.typesetPromise([body]);
+            }
+        }
+
+        function closeModal() {
+            document.getElementById("solutionModal").style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            const modal = document.getElementById("solutionModal");
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+
+        window.onload = generateExam;
+    </script>
+</body>
+</html>
