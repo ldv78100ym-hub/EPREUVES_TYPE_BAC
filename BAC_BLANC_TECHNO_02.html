@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sujet d'Évaluation Mathématiques - Générateur Dynamique (Fractions & Pédagogie)</title>
+    
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']],
+          displayMath: [['$$', '$$'], ['\\[', '\\]']],
+          macros: { dfrac: ["\\displaystyle\\frac{#1}{#2}", 2] }
+        },
+        startup: {
+          pageReady: () => {
+            return MathJax.startup.defaultPageReady().then(() => {
+              generateExam();
+            });
+          }
+        }
+      };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --primary-color: #0056b3;
+            --accent-color: #e9ecef;
+            --corr-bg: #f8f9fa;
+            --corr-border: #28a745;
+            --font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            --font-size: 16px;
+        }
+
+        body.high-contrast {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --primary-color: #4da3ff;
+            --accent-color: #2a2a2a;
+            --corr-bg: #1e1e1e;
+            --corr-border: #4da3ff;
+        }
+
+        body.dys-mode {
+            --font-family: 'Comic Sans MS', 'OpenDyslexic', sans-serif;
+            letter-spacing: 0.1em;
+            word-spacing: 0.2em;
+            line-height: 1.6;
+        }
+
+        body {
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .toolbar {
+            display: flex; flex-wrap: wrap; gap: 10px;
+            background-color: var(--accent-color); padding: 15px; border-radius: 8px; margin-bottom: 20px;
+        }
+
+        button {
+            background-color: var(--primary-color); color: #fff; border: none;
+            padding: 10px 15px; border-radius: 5px; cursor: pointer; font-size: 0.9em; font-family: inherit;
+        }
+        button:hover { opacity: 0.9; }
+        .btn-generate { background-color: #28a745; font-weight: bold; font-size: 1.1em; padding: 12px 20px; width: 100%; margin-bottom: 20px;}
+        .btn-generate:hover { background-color: #218838; }
+        .btn-correction { background-color: #17a2b8; margin-top: 15px; display: inline-block; }
+        .btn-review-qcm { background-color: #6f42c1; font-weight: bold; margin-top: 10px;}
+
+        .qcm-setup { text-align: center; margin: 30px 0; display: flex; flex-direction: column; align-items: center; gap: 10px;}
+        .qcm-player { display: none; margin-top: 20px; }
+        .qcm-slide { display: none; padding: 20px; border: 2px solid var(--primary-color); border-radius: 8px; font-size: 1.2em; margin-bottom: 20px;}
+        .qcm-slide.active { display: block; }
+        
+        .choice-row { display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px; }
+        .choice-item { background: var(--accent-color); padding: 10px; border-radius: 5px; flex: 1; min-width: 150px; text-align: center; }
+        .controls { display: flex; justify-content: space-between; margin-top: 20px; }
+        #timer-display { font-size: 1.5em; font-weight: bold; color: #d9534f; text-align: center; margin-top: 15px; }
+
+        .correction-block {
+            position: absolute; left: -9999px; opacity: 0; height: 0; overflow: hidden;
+            background-color: var(--corr-bg); border-left: 4px solid var(--corr-border);
+            padding: 0 15px; margin-top: 15px; border-radius: 4px; transition: opacity 0.3s ease;
+        }
+        .correction-block.visible { position: static; opacity: 1; height: auto; overflow: visible; padding: 15px; line-height: 1.6; }
+        .exercice-section { background: var(--accent-color); padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+
+        .qcm-player.review-mode { display: block !important; }
+        .qcm-player.review-mode .qcm-slide { display: block !important; margin-bottom: 30px; }
+        .qcm-player.review-mode .controls, 
+        .qcm-player.review-mode #timer-display { display: none !important; }
+        .qcm-player.review-mode .btn-correction { display: none !important; }
+        .qcm-player.review-mode .correction-block { position: static; opacity: 1; height: auto; overflow: visible; padding: 15px; }
+
+        @media print {
+            .no-print, .toolbar, .qcm-setup, .controls, #timer-display, .btn-correction, .btn-generate, .btn-review-qcm { display: none !important; }
+            .qcm-player { display: block !important; }
+            .qcm-slide { display: block !important; margin-bottom: 20px; border: none; font-size: 1em; page-break-inside: avoid; }
+            .correction-block {
+                position: static !important; opacity: 1 !important; height: auto !important;
+                overflow: visible !important; padding: 15px !important; page-break-inside: avoid;
+            }
+            body { max-width: 100%; font-size: 12pt; }
+        }
+
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background: var(--bg-color); color: var(--text-color); padding: 30px; border-radius: 8px;
+            max-width: 600px; line-height: 1.5; position: relative;
+        }
+        .close-modal { position: absolute; top: 10px; right: 15px; cursor: pointer; font-size: 1.5em; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+    <div class="toolbar no-print">
+        <button onclick="toggleDys()">Mode DYS</button>
+        <button onclick="toggleContrast()">Contraste Élevé</button>
+        <button onclick="changeFontSize(1)">A+</button>
+        <button onclick="changeFontSize(-1)">A-</button>
+        <button onclick="window.print()">Générer PDF (Sujet + Corrigé)</button>
+        <button onclick="openModal()">Droits d'auteur</button>
+    </div>
+
+    <button class="btn-generate no-print" onclick="generateExam()">🔄 Générer un nouveau sujet (Valeurs aléatoires)</button>
+
+    <h1 style="text-align: center;">Sujet d'Évaluation Mathématiques</h1>
+    <h3 style="text-align: center;">Classe de Première Technologique</h3>
+    <hr>
+
+    <div id="exam-container">
+        </div>
+
+    <div id="copyright-modal" class="modal no-print">
+        <div class="modal-content">
+            <span class="close-modal" onclick="closeModal()">&times;</span>
+            <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Avril 2026</p>
+            <p><strong>Licence d'Utilisation Non Commerciale</strong><br>
+            Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Évaluation Mathématiques') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            <p><strong>Conditions :</strong><br>
+            - <strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.<br>
+            - <strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</p>
+            <p><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</p>
+            <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- Accessibilité & Interface ---
+        let currentFontSize = 16;
+        function toggleDys() { document.body.classList.toggle('dys-mode'); }
+        function toggleContrast() { document.body.classList.toggle('high-contrast'); setTimeout(drawTree, 350); }
+        function changeFontSize(step) {
+            currentFontSize += step * 2;
+            document.documentElement.style.setProperty('--font-size', currentFontSize + 'px');
+        }
+        function toggleCorrection(id) { document.getElementById(id).classList.toggle('visible'); }
+        function openModal() { document.getElementById('copyright-modal').style.display = 'flex'; }
+        function closeModal() { document.getElementById('copyright-modal').style.display = 'none'; }
+
+        // --- Utilitaires Mathématiques ---
+        function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function formatFr(num) { return num.toString().replace('.', ','); }
+
+        function getShuffledLetters() {
+            let arr = [];
+            ['A','B','C','D','E'].forEach(l => { for(let i=0; i<4; i++) arr.push(l); });
+            return arr.sort(() => Math.random() - 0.5);
+        }
+
+        // --- GESTION ROBUSTE DES CHOIX QCM ---
+        // Utilisation de \text{} pour tout ce qui contient des mots
+        function buildChoicesLatex(correctVal, distractorFunc, targetLetter) {
+            let choices = [];
+            let used = new Set([correctVal]);
+            let limit = (targetLetter === 'E') ? 4 : 3;
+            let attempts = 0; 
+            while(choices.length < limit && attempts < 100) {
+                let d = distractorFunc();
+                if(!used.has(d)) { choices.push(d); used.add(d); }
+                attempts++;
+            }
+            while(choices.length < limit) {
+                let fallback = "\\text{Valeur } " + rand(100, 999);
+                if(!used.has(fallback)) { choices.push(fallback); used.add(fallback); }
+            }
+            if(targetLetter !== 'E') {
+                let idx = targetLetter.charCodeAt(0) - 65;
+                choices.splice(idx, 0, correctVal);
+            }
+            choices.push("\\text{Autre}");
+            return choices;
+        }
+
+        // --- MODULE FRACTIONS POUR EXERCICE 3 ---
+        function gcd(a, b) { return b === 0 ? Math.abs(a) : gcd(b, a % b); }
+        function simplify(n, d) {
+            if(n === 0) return {n:0, d:1};
+            if (d < 0) { n = -n; d = -d; }
+            let g = gcd(Math.abs(n), d);
+            return { n: n / g, d: d / g };
+        }
+        function makeFrac(n, d=1) { return simplify(n, d); }
+        function addF(f1, f2) { return simplify(f1.n * f2.d + f2.n * f1.d, f1.d * f2.d); }
+        function subF(f1, f2) { return simplify(f1.n * f2.d - f2.n * f1.d, f1.d * f2.d); }
+        function mulF(f1, f2) { return simplify(f1.n * f2.n, f1.d * f2.d); }
+        function divF(f1, f2) { return simplify(f1.n * f2.d, f1.d * f2.n); }
+        
+        function toLatex(f, showPlus = false) {
+            if (f.n === 0) return showPlus ? "+ 0" : "0";
+            let sign = f.n < 0 ? "-" : (showPlus ? "+" : "");
+            let absN = Math.abs(f.n);
+            if (f.d === 1) return `${sign} ${absN}`.trim();
+            return `${sign} \\dfrac{${absN}}{${f.d}}`.trim();
+        }
+        
+        function toLatexTerm(f, variable, isFirst = false) {
+            if (f.n === 0) return "";
+            let sign = f.n < 0 ? "-" : (isFirst ? "" : "+");
+            let absN = Math.abs(f.n);
+            let coeff = "";
+            if (f.d === 1) {
+                if (absN === 1 && variable !== "") coeff = "";
+                else coeff = absN;
+            } else {
+                coeff = `\\dfrac{${absN}}{${f.d}}`;
+            }
+            return `${sign} ${coeff}${variable} `;
+        }
+
+        let treeData = {}; 
+        let currentSlide = 0, slides = [];
+        let timerInterval, timeLeft = 45;
+
+        function generateExam() {
+            let letters = getShuffledLetters();
+            let qcmHTML = `
+                <h2>Partie 1 : Automatismes (QCM)</h2>
+                <p>Ce questionnaire comporte 20 questions distinctes. Une seule des cinq réponses proposées est exacte.</p>
+                <div class="qcm-setup no-print" id="setup-container">
+                    <div>
+                        <button onclick="startQCM('timed')">Lancer le QCM (Minuteur : 45s/question)</button>
+                        <button onclick="startQCM('manual')">Lancer le QCM (Manuel)</button>
+                    </div>
+                    <button class="btn-review-qcm no-print" onclick="showQCMReview()">Afficher la correction complète du QCM</button>
+                </div>
+                <div class="qcm-player" id="qcm-player">
+                    <div id="slides-container">
+            `;
+
+            // QCM Générateurs avec Pédagogie Développée et Textes LaTeX propres
+            const generators = [
+                (target) => { 
+                    let a = rand(2,6), b = rand(2,9); 
+                    let corr = `${3*a}x^2 - ${b}`; 
+                    return { 
+                        q: `On considère la fonction $f$ définie sur $\\mathbb{R}$ par $f(x) = ${a}x^3 - ${b}x$. Sa fonction dérivée $f'$ est définie par :`, 
+                        ch: buildChoicesLatex(corr, () => `${rand(2,8)}x^2 - ${rand(2,15)}`, target), 
+                        exp: `<strong>Méthode :</strong> La fonction $f$ est une somme de termes.<br>1) La dérivée de $x^3$ est $3x^2$. Multipliée par le coefficient $${a}$, on obtient $${a} \\times 3x^2 = ${3*a}x^2$.<br>2) La dérivée de $x$ est $1$. Multipliée par le coefficient $${b}$, cela donne $${b}$.<br><strong>Conclusion :</strong> Par soustraction, on trouve $f'(x) = ${3*a}x^2 - ${b}$.`
+                    }; 
+                },
+                (target) => { 
+                    let m = rand(2,4), xA = rand(1,3), yA = rand(2,5), p = yA - m*xA; 
+                    let xB = xA + rand(1,3), yB = yA + m*(xB - xA);
+                    let corr = `y = ${m}x ${p>=0?'+':'-'} ${Math.abs(p)}`; 
+                    return { 
+                        q: `La droite passant par les points $A(${xA} ; ${yA})$ et $B(${xB} ; ${yB})$ a pour équation réduite :`, 
+                        ch: buildChoicesLatex(corr, () => `y = ${m+rand(-2,3)}x ${p+rand(-3,4)>=0?'+':'-'} ${Math.abs(p+rand(-3,4))}`, target), 
+                        exp: `<strong>Méthode :</strong> Une équation réduite de droite s'écrit $y = mx + p$.<br>1) On calcule le coefficient directeur $m = \\dfrac{y_B - y_A}{x_B - x_A} = \\dfrac{${yB} - ${yA}}{${xB} - ${xA}} = ${m}$. L'équation est donc $y = ${m}x + p$.<br>2) On trouve l'ordonnée à l'origine $p$ en utilisant les coordonnées du point $A$ : $${yA} = ${m} \\times ${xA} + p \\implies p = ${yA} - ${m*xA} = ${p}$.<br><strong>Conclusion :</strong> L'équation est $${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let P = rand(10, 30)*10, b = rand(1,4)*10, h = rand(1,4)*10; 
+                    let corr = P * (1 - b/100) * (1 + h/100); 
+                    return { 
+                        q: `Un article coûte initialement ${P} €. Son prix baisse de ${b} \\%, puis augmente de ${h} \\%. Son prix final est de :`, 
+                        ch: buildChoicesLatex(formatFr(corr) + "\\text{ €}", () => formatFr(P * (1 + (h-b)/100) + rand(-15,15)) + "\\text{ €}", target), 
+                        exp: `<strong>Méthode :</strong> Appliquer des pourcentages successifs revient à multiplier leurs coefficients multiplicateurs.<br>1) Une baisse de $${b}\\%$ correspond à un coefficient de $1 - \\dfrac{${b}}{100} = ${formatFr(1 - b/100)}$.<br>2) Une hausse de $${h}\\%$ correspond à un coefficient de $1 + \\dfrac{${h}}{100} = ${formatFr(1 + h/100)}$.<br><strong>Conclusion :</strong> Le prix final est donc de $${P} \\times ${formatFr(1 - b/100)} \\times ${formatFr(1 + h/100)} = ${formatFr(corr)}$ €.`
+                    }; 
+                },
+                (target) => { 
+                    let u0 = rand(5, 20), r = rand(3, 8), n = rand(8, 15); let corr = u0 + n*r; 
+                    return { 
+                        q: `Soit $(u_n)$ une suite arithmétique de premier terme $u_0 = ${u0}$ et de raison $r = ${r}$. La valeur du terme $u_{${n}}$ est :`, 
+                        ch: buildChoicesLatex(corr, () => u0 + (n+rand(-5,5))*r + rand(-2,2), target), 
+                        exp: `<strong>Méthode :</strong> Pour une suite arithmétique, la formule explicite donnant le terme général est $u_n = u_0 + n \\times r$.<br><strong>Conclusion :</strong> En remplaçant par les valeurs données : $u_{${n}} = ${u0} + ${n} \\times ${r} = ${u0} + ${n*r} = ${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let n1 = rand(3,7), d1 = 8, n2 = rand(1,5), d2 = 6, num = n1*3 + n2*4, den = 24, p = gcd(num, den); 
+                    let corr = `\\dfrac{${num/p}}{${den/p}}`; 
+                    return { 
+                        q: `La forme irréductible de l'expression $\\dfrac{${n1}}{${d1}} + \\dfrac{${n2}}{${d2}}$ est :`, 
+                        ch: buildChoicesLatex(corr, () => `\\dfrac{${num/p + rand(1,5)}}{${den/p + rand(1,5)}}`, target), 
+                        exp: `<strong>Méthode :</strong> Pour additionner des fractions, il faut obligatoirement les réduire au même dénominateur.<br>1) Le plus petit multiple commun de ${d1} et ${d2} est 24.<br>2) On obtient : $\\dfrac{${n1} \\times 3}{${d1} \\times 3} + \\dfrac{${n2} \\times 4}{${d2} \\times 4} = \\dfrac{${n1*3}}{24} + \\dfrac{${n2*4}}{24} = \\dfrac{${num}}{24}$.<br><strong>Conclusion :</strong> En simplifiant le numérateur et le dénominateur par ${p}, on trouve $${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let tx = randItem([25, 50, 100]); let cm = 1 + tx/100, rec = (1/cm - 1)*100; 
+                    let corr = `\\text{baisse de } ${Math.abs(Math.round(rec))} \\%`; 
+                    return { 
+                        q: `Le taux d'évolution réciproque d'une augmentation de ${tx} \\% est une :`, 
+                        ch: buildChoicesLatex(corr, () => `\\text{baisse de } ${tx + rand(-15,15)} \\%`, target), 
+                        exp: `<strong>Méthode :</strong> L'évolution réciproque permet de compenser l'évolution initiale pour revenir à la valeur de départ.<br>1) Le coefficient multiplicateur (CM) de départ est $1 + \\dfrac{${tx}}{100} = ${formatFr(cm)}$.<br>2) Le CM réciproque est $\\dfrac{1}{CM} = \\dfrac{1}{${formatFr(cm)}} = ${formatFr((1/cm).toFixed(2))}$.<br><strong>Conclusion :</strong> Le taux d'évolution correspondant est $${formatFr((1/cm).toFixed(2))} - 1 = ${formatFr((1/cm - 1).toFixed(2))}$, ce qui représente une baisse de ${Math.abs(Math.round(rec))} \\%.`
+                    }; 
+                },
+                (target) => { 
+                    let a = rand(2,5), b = rand(2,7); let corr = `${a*a}x^2 + ${2*a*b}x + ${b*b}`; 
+                    return { 
+                        q: `L'expression développée de $(${a}x + ${b})^2$ est :`, 
+                        ch: buildChoicesLatex(corr, () => `${a*a}x^2 ${randItem(['+','-'])} ${2*a*b+rand(1,6)}x ${randItem(['+','-'])} ${b*b}`, target), 
+                        exp: `<strong>Méthode :</strong> On utilise l'identité remarquable du carré d'une somme : $(a+b)^2 = a^2 + 2ab + b^2$.<br>1) Ici, $a = ${a}x$ et $b = ${b}$.<br>2) On élève au carré : $(${a}x)^2 = ${a*a}x^2$ et $${b}^2 = ${b*b}$.<br>3) On calcule le double produit : $2 \\times (${a}x) \\times ${b} = ${2*a*b}x$.<br><strong>Conclusion :</strong> L'expression finale est $${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let n1=rand(2,5), d1=rand(3,7), n2=rand(2,5), d2=rand(3,7); if(d1===n1) d1++; if(d2===n2) d2++; 
+                    let num = n1*n2, den = d1*d2, p = gcd(num, den); let corr = `\\dfrac{${num/p}}{${den/p}}`; 
+                    return { 
+                        q: `Le résultat de $\\dfrac{${n1}}{${d1}} \\times \\dfrac{${n2}}{${d2}}$ est égal à :`, 
+                        ch: buildChoicesLatex(corr, () => `\\dfrac{${num/p + rand(1,7)}}{${den/p + rand(1,7)}}`, target), 
+                        exp: `<strong>Méthode :</strong> Contrairement à l'addition, la multiplication de fractions ne nécessite pas de dénominateur commun. On multiplie les numérateurs entre eux et les dénominateurs entre eux.<br>1) Calcul direct : $\\dfrac{${n1} \\times ${n2}}{${d1} \\times ${d2}} = \\dfrac{${num}}{${den}}$.<br><strong>Conclusion :</strong> La fraction irréductible s'obtient en simplifiant par ${p}, ce qui donne $${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let v0 = rand(2,5), q = rand(2,3), n = rand(3,4); let corr = v0 * Math.pow(q, n); 
+                    return { 
+                        q: `Soit $(v_n)$ une suite géométrique de premier terme $v_0 = ${v0}$ et de raison $q = ${q}$. Le terme $v_${n}$ vaut :`, 
+                        ch: buildChoicesLatex(corr, () => v0 * Math.pow(q, n+rand(-2,2)) + rand(1,15), target), 
+                        exp: `<strong>Méthode :</strong> Pour une suite géométrique, la formule explicite donnant le terme général est $v_n = v_0 \\times q^n$.<br><strong>Conclusion :</strong> En appliquant avec $n = ${n}$, on obtient $v_{${n}} = ${v0} \\times ${q}^${n} = ${v0} \\times ${Math.pow(q, n)} = ${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let a = rand(2,6), b = rand(3,9), sol = rand(2,5); let corr = `x = ${sol}`; 
+                    return { 
+                        q: `La solution de l'équation $${a}x + ${b} = ${a*sol + b}$ est :`, 
+                        ch: buildChoicesLatex(corr, () => `x = ${sol + randItem([-3,-2,-1,1,2,3])}`, target), 
+                        exp: `<strong>Méthode :</strong> On résout l'équation du premier degré en isolant l'inconnue $x$.<br>1) On soustrait ${b} des deux côtés : $${a}x = ${a*sol + b} - ${b} \\implies ${a}x = ${a*sol}$.<br>2) On divise des deux côtés par ${a}$ : $x = \\dfrac{${a*sol}}{${a}}$.<br><strong>Conclusion :</strong> La solution est bien $x = ${sol}$.`
+                    }; 
+                },
+                (target) => { 
+                    let a = rand(2,4), x = rand(-4,-2); let corr = x*x - a*x; 
+                    return { 
+                        q: `Soit la fonction $h(x) = x^2 - ${a}x$. L'image de $${x}$ par $h$ est :`, 
+                        ch: buildChoicesLatex(corr, () => (x+rand(1,5))*(x+rand(1,5)) - a*(x+rand(1,5)), target), 
+                        exp: `<strong>Méthode :</strong> Pour calculer l'image d'un nombre, on remplace tous les $x$ par ce nombre dans l'expression de la fonction.<br>Attention aux parenthèses pour les nombres négatifs !<br>1) Calcul : $h(${x}) = (${x})^2 - ${a} \\times (${x})$.<br>2) On évalue : $${x*x} - (${a*x}) = ${x*x} + ${-a*x}$.<br><strong>Conclusion :</strong> Le résultat final est $${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let k = rand(2,7); let corr = `-\\dfrac{${k}}{x^2}`; 
+                    return { 
+                        q: `La fonction dérivée de $f(x) = \\dfrac{${k}}{x}$ sur l'intervalle $]0 ; +\\infty[$ est :`, 
+                        ch: buildChoicesLatex(corr, () => `\\dfrac{${k + rand(-3,5)}}{x^2}`, target), 
+                        exp: `<strong>Méthode :</strong> La fonction est de la forme $k \\times u(x)$ avec $k = ${k}$ et $u(x) = \\dfrac{1}{x}$.<br>La dérivée d'une constante multipliée par une fonction s'écrit $k \\times u'(x)$.<br>Sachant que la dérivée usuelle de $\\dfrac{1}{x}$ est $-\\dfrac{1}{x^2}$.<br><strong>Conclusion :</strong> La dérivée de $f$ est $${k} \\times \\left(-\\dfrac{1}{x^2}\\right) = ${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let a = rand(5,9), b = rand(-6,-2); let corr = `10^{${a+b}}`; 
+                    return { 
+                        q: `L'expression $10^{${a}} \\times 10^{${b}}$ est égale à :`, 
+                        ch: buildChoicesLatex(corr, () => `10^{${a+b+randItem([-4,-2,1,2,3])}}`, target), 
+                        exp: `<strong>Méthode :</strong> D'après les propriétés calculatoires sur les puissances, lorsqu'on multiplie deux puissances d'un même nombre, on additionne leurs exposants : $10^m \\times 10^n = 10^{m+n}$.<br><strong>Conclusion :</strong> Ici, $10^{${a}} \\times 10^{${b}} = 10^{${a} + (${b})} = 10^{${a+b}}$.`
+                    }; 
+                },
+                (target) => { 
+                    let tot = rand(3,6)*40, pct = randItem([20, 25, 30, 40]); let corr = `${pct} \\%`; 
+                    return { 
+                        q: `Dans une classe de ${tot} élèves, ${(pct*tot)/100} étudient l'espagnol. La proportion correspondante est :`, 
+                        ch: buildChoicesLatex(corr, () => `${pct + randItem([-10,-5,5,10,15])} \\%`, target), 
+                        exp: `<strong>Méthode :</strong> La proportion se calcule en divisant l'effectif étudié par l'effectif total.<br>1) Le rapport est $\\dfrac{${(pct*tot)/100}}{${tot}} = ${formatFr(pct/100)}$.<br>2) Pour exprimer ce résultat sous forme de pourcentage, on le multiplie par 100.<br><strong>Conclusion :</strong> Cela donne ${pct} \\%.`
+                    }; 
+                },
+                (target) => { 
+                    let sol = rand(5,11); let corr = `${sol} \\text{ et } -${sol}`; 
+                    return { 
+                        q: `Les solutions réelles de l'équation $x^2 = ${sol*sol}$ sont :`, 
+                        ch: buildChoicesLatex(corr, () => `\\text{Uniquement } ${rand(2, 20)}`, target), 
+                        exp: `<strong>Méthode :</strong> Une équation mathématique de la forme $x^2 = k$ (avec un nombre $k$ strictement positif) possède toujours deux solutions réelles distinctes : $\\sqrt{k}$ et $-\\sqrt{k}$.<br><strong>Conclusion :</strong> Pour $x^2 = ${sol*sol}$, les deux solutions sont bien $x = \\sqrt{${sol*sol}} = ${sol}$ et $x = -\\sqrt{${sol*sol}} = -${sol}$.`
+                    }; 
+                },
+                (target) => { 
+                    let tx = rand(3,15); let corr = `+ ${tx} \\%`; 
+                    return { 
+                        q: `Un coefficient multiplicateur de $${formatFr(1 + tx/100)}$ correspond à une évolution de :`, 
+                        ch: buildChoicesLatex(corr, () => `+ ${tx + rand(-5,15)} \\%`, target), 
+                        exp: `<strong>Méthode :</strong> Pour déduire le taux d'évolution $t$ à partir d'un coefficient multiplicateur (CM), on utilise la formule $t = CM - 1$.<br>1) On calcule le taux : $t = ${formatFr(1 + tx/100)} - 1 = ${formatFr(tx/100)}$.<br>2) En décalant la virgule de deux rangs, on repasse sous forme de pourcentage.<br><strong>Conclusion :</strong> Ce résultat positif confirme bien une hausse de $+ ${tx} \\%$.`
+                    }; 
+                },
+                (target) => { 
+                    let base = rand(3,7), e1 = rand(3,6), e2 = rand(4,8); let corr = `${base}^{${e1+e2}}`; 
+                    return { 
+                        q: `L'expression $${base}^{${e1}} \\times ${base}^{${e2}}$ peut s'écrire sous la forme :`, 
+                        ch: buildChoicesLatex(corr, () => `${base*base}^{${e1+e2+rand(-4,4)}}`, target), 
+                        exp: `<strong>Méthode :</strong> Tout comme pour les puissances de 10, lorsqu'on multiplie des puissances possédant la même base, on conserve cette base intacte et on additionne simplement les exposants.<br>Attention, il ne faut surtout pas multiplier les bases entre elles !<br><strong>Conclusion :</strong> Le résultat est donc $${base}^{${e1} + ${e2}} = ${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let xA = rand(-6,-2), yA = rand(2,6), xB = rand(4,10), yB = rand(8,14); let corr = `(${(xA+xB)/2} ; ${(yA+yB)/2})`; 
+                    return { 
+                        q: `Les coordonnées du milieu du segment $[AB]$ avec $A(${xA} ; ${yA})$ et $B(${xB} ; ${yB})$ sont :`, 
+                        ch: buildChoicesLatex(corr, () => `(${(xA+xB)/2 + rand(-3,3)} ; ${(yA+yB)/2 + rand(-3,3)})`, target), 
+                        exp: `<strong>Méthode :</strong> Les coordonnées géométriques du milieu d'un segment correspondent à la moyenne des coordonnées de ses deux extrémités.<br>1) Pour l'abscisse : $\\dfrac{x_A + x_B}{2} = \\dfrac{${xA} + ${xB}}{2} = ${(xA+xB)/2}$.<br>2) Pour l'ordonnée : $\\dfrac{y_A + y_B}{2} = \\dfrac{${yA} + ${yB}}{2} = ${(yA+yB)/2}$.<br><strong>Conclusion :</strong> Le milieu a pour coordonnées $${corr}$.`
+                    }; 
+                },
+                (target) => { 
+                    let a = rand(2,5), b = rand(4,10), s = randItem([-1, 1]); 
+                    let corr = s === -1 ? "\\text{Positive puis n\\'egative}" : "\\text{N\\'egative puis positive}"; 
+                    return { 
+                        q: `Le signe de l'expression affine $${s*a}x ${b>=0?'+':'-'} ${Math.abs(b)}$ est :`, 
+                        ch: buildChoicesLatex(corr, () => "\\text{" + randItem(["Toujours positive", "Toujours n\\'egative", s === -1 ? "N\\'egative puis positive" : "Positive puis n\\'egative", "Constante"]) + "}", target), 
+                        exp: `<strong>Méthode :</strong> Le signe global d'une fonction affine dépend du signe de son coefficient directeur (le nombre devant le $x$).<br>Ici, le coefficient vaut $${s*a}$, qui est ${s === -1 ? 'strictement négatif' : 'strictement positif'}.<br><strong>Conclusion :</strong> La droite représentative est donc ${s === -1 ? 'décroissante : elle part des valeurs situées au-dessus de l\'axe des abscisses (+) pour plonger vers les valeurs en dessous (-)' : 'croissante : elle part des profondeurs négatives (-) pour monter vers les valeurs positives (+)'}.`
+                    }; 
+                },
+                (target) => { 
+                    let a = rand(3,6), b = rand(7,10); let corr = a + b; 
+                    return { 
+                        q: `La valeur exacte de $\\sqrt{${a*a}} + \\sqrt{${b*b}}$ est :`, 
+                        ch: buildChoicesLatex(corr, () => a + b + rand(1,10), target), 
+                        exp: `<strong>Méthode :</strong> Attention au piège classique ! La racine carrée n'est pas distributive par rapport à l'addition. Il est mathématiquement faux d'additionner les valeurs situées sous la racine.<br>1) Il faut obligatoirement calculer chaque racine de manière indépendante : $\\sqrt{${a*a}} = ${a}$ et $\\sqrt{${b*b}} = ${b}$.<br>2) Ensuite, on additionne les résultats trouvés : $${a} + ${b}$.<br><strong>Conclusion :</strong> Le résultat final est bien $${corr}$.`
+                    }; 
+                }
+            ];
+
+            generators.forEach((gen, index) => {
+                let letter = letters[index]; let obj = gen(letter);
+                let choicesHtml = '';
+                ['A','B','C','D','E'].forEach((lbl, i) => { choicesHtml += `<div class="choice-item"><strong>${lbl}:</strong> $${obj.ch[i]}$</div>`; });
+                let ansMsg = letter === 'E' ? "Réponse E (Autre)." : `Réponse ${letter}.`;
+                qcmHTML += `
+                    <div class="qcm-slide">
+                        <p><strong>${index+1}.</strong> ${obj.q}</p>
+                        <div class="choice-row">${choicesHtml}</div>
+                        <button class="btn-correction no-print" onclick="toggleCorrection('corr-q${index}')">Explication didactique</button>
+                        <div id="corr-q${index}" class="correction-block"><strong>${ansMsg}</strong><br><br>${obj.exp}</div>
+                    </div>`;
+            });
+            qcmHTML += `</div><div class="controls no-print" id="qcm-controls"><button onclick="prevSlide()" id="btn-prev">Précédent</button><button onclick="nextSlide()" id="btn-next">Suivant</button></div><div id="timer-display"></div></div>`;
+
+            // --- EXERCICE 3 : FRACTIONS DYNAMIQUES ---
+            let r1 = rand(-3, 3);
+            let r2 = rand(-3, 3);
+            while (r1 === r2) r2 = rand(-3, 3);
+            if (r1 > r2) { let temp = r1; r1 = r2; r2 = temp; }
+            
+            let K_n = rand(-5, 5); while(K_n === 0) K_n = rand(-5, 5);
+            let K_d = randItem([1, 1, 2, 3]);
+            let K = makeFrac(K_n, K_d);
+            
+            let a = divF(K, makeFrac(3));
+            let b = divF(mulF(makeFrac(-1), mulF(K, makeFrac(r1 + r2))), makeFrac(2));
+            let c = mulF(K, makeFrac(r1 * r2));
+            let d_val = makeFrac(rand(-10, 10), randItem([1, 1, 2, 3]));
+            
+            let gStr = toLatexTerm(a, "x^3", true) + toLatexTerm(b, "x^2", false) + toLatexTerm(c, "x", false) + toLatexTerm(d_val, "", false);
+            let a_prime = mulF(makeFrac(3), a);
+            let b_prime = mulF(makeFrac(2), b);
+            let gpStr = toLatexTerm(a_prime, "x^2", true) + toLatexTerm(b_prime, "x", false) + toLatexTerm(c, "", false);
+            
+            let f1 = r1 === 0 ? "x" : `(x ${r1 < 0 ? '+' : '-'} ${Math.abs(r1)})`;
+            let f2 = r2 === 0 ? "x" : `(x ${r2 < 0 ? '+' : '-'} ${Math.abs(r2)})`;
+            let factStr = toLatexTerm(K, "", true).trim();
+            if (factStr === "1") factStr = ""; if (factStr === "-1") factStr = "-";
+            if (r1 === 0) factStr += `x${f2}`; else if (r2 === 0) factStr += `x${f1}`; else factStr += `${f1}${f2}`;
+            
+            function evalG(x) {
+                let xF = makeFrac(x); let x2 = mulF(xF, xF); let x3 = mulF(x2, xF);
+                return addF(addF(mulF(a, x3), mulF(b, x2)), addF(mulF(c, xF), d_val));
+            }
+            function evalGp(x) {
+                let xF = makeFrac(x); let x2 = mulF(xF, xF);
+                return addF(addF(mulF(a_prime, x2), mulF(b_prime, xF)), c);
+            }
+            
+            let g1 = evalG(1), gp1 = evalGp(1);
+            let pTan = subF(g1, gp1);
+            let tStr = `y = ${toLatexTerm(gp1, "x", true)} ${toLatex(pTan, true)}`;
+            if (gp1.n === 0) tStr = `y = ${toLatex(pTan, false)}`;
+            
+            let sumExp = (-r1-r2) === 0 ? '' : ((-r1-r2) > 0 ? '+ ' : '- ') + (Math.abs(-r1-r2)===1 ? 'x' : Math.abs(-r1-r2) + 'x');
+            let prodExp = (r1*r2) === 0 ? '' : ((r1*r2) > 0 ? '+ ' : '- ') + Math.abs(r1*r2);
+            let dev1 = `x^2 ${sumExp} ${prodExp}`.trim();
+            
+            let dir1 = K.n > 0 ? "croissante" : "décroissante";
+            let dir2 = K.n > 0 ? "décroissante" : "croissante";
+
+            let ex3HTML = `
+                <hr><h2>Partie 2 : Analyse et Probabilités</h2>
+                <div class="exercice-section">
+                    <h3>Exercice 3 : Étude de fonction</h3>
+                    <p>Soit la fonction $g$ définie sur l'intervalle $[-4 ; 4]$ par $g(x) = ${gStr}$. On note $\\mathcal{C}_g$ sa courbe représentative.</p>
+                    <ol>
+                        <li>Calculer l'expression de la fonction dérivée $g'(x)$.</li>
+                        <li>Montrer que l'on peut écrire $g'(x) = ${factStr}$.</li>
+                        <li>Étudier le signe de $g'(x)$ et en déduire les variations de la fonction $g$.</li>
+                        <li>Déterminer l'équation de la tangente $T$ à $\\mathcal{C}_g$ au point d'abscisse $1$.</li>
+                    </ol>
+                    <button class="btn-correction no-print" onclick="toggleCorrection('corr-ex3')">Afficher/Masquer la correction</button>
+                    <div id="corr-ex3" class="correction-block">
+                        <strong>1.</strong> En appliquant les règles de dérivation (même sur des fractions), on obtient : $g'(x) = ${gpStr}$.<br><br>
+                        <strong>2.</strong> On développe l'expression factorisée : $${factStr} = ${toLatexTerm(K,"",true).trim()}(${dev1}) = ${gpStr}$. On retrouve bien la fonction dérivée.<br><br>
+                        <strong>3.</strong> $g'(x)$ est un trinôme dont les racines se lisent sur la forme factorisée : $x=${r1}$ et $x=${r2}$. Le coefficient dominant est $a = ${toLatex(K)}$, qui est ${K.n > 0 ? 'positif' : 'négatif'}. $g'(x)$ est du signe de $a$ à l'extérieur des racines.<br>Ainsi, la fonction $g$ est ${dir1} sur $[-4 ; ${r1}]$, ${dir2} sur $[${r1} ; ${r2}]$, puis ${dir1} sur $[${r2} ; 4]$.<br><br>
+                        <strong>4.</strong> La formule de la tangente est $y = g'(1)(x - 1) + g(1)$.<br> On calcule $g(1) = ${toLatex(g1)}$ et $g'(1) = ${toLatex(gp1)}$.<br> L'équation est $y = ${toLatex(gp1,false)}(x - 1) ${toLatex(g1,true)} \\implies ${tStr}$.
+                    </div>
+                </div>
+            `;
+
+            // --- EXERCICE 4 : PROBABILITÉS ---
+            let pE = randItem([0.6, 0.7, 0.75, 0.8]);
+            let pA = Math.round((1 - pE)*100)/100;
+            let pET = randItem([0.2, 0.3, 0.4]);
+            let pAT = randItem([0.1, 0.5, 0.6]);
+            let inter = Math.round(pE * pET * 1000)/1000;
+            let tot = Math.round((pE*pET + pA*pAT)*1000)/1000;
+            let condInv = Math.round((pA*pAT)/tot * 1000)/1000;
+
+            treeData = { pE, pA, pET, pAT, pE_not: Math.round((1-pET)*100)/100, pA_not: Math.round((1-pAT)*100)/100 };
+
+            let ex4HTML = `
+                <div class="exercice-section">
+                    <h3>Exercice 4 : Probabilités conditionnelles</h3>
+                    <p>Dans un lycée, ${pE*100} \\% des élèves étudient l'espagnol en LV2 et ${pA*100} \\% étudient l'allemand. Parmi ceux étudiant l'espagnol, ${pET*100} \\% font du théâtre. Chez les germanistes, ce taux est de ${pAT*100} \\%.</p>
+                    <p>On choisit un élève au hasard. On note $E$ (espagnol), $A$ (allemand) et $T$ (théâtre).</p>
+                    <ol>
+                        <li>Modéliser la situation par un arbre pondéré.</li>
+                        <li>Calculer $P(E \\cap T)$. Interpréter ce résultat.</li>
+                        <li>Montrer que la probabilité qu'un élève choisi au hasard fasse du théâtre est de $${formatFr(tot)}$.</li>
+                        <li>Sachant que l'élève fait du théâtre, quelle est la probabilité qu'il étudie l'allemand ?</li>
+                    </ol>
+                    <button class="btn-correction no-print" onclick="toggleCorrection('corr-ex4')">Afficher/Masquer la correction</button>
+                    <div id="corr-ex4" class="correction-block">
+                        <strong>1.</strong> Arbre de probabilités :<br>
+                        <canvas id="prob-tree" width="400" height="250" style="margin: 10px 0; background: var(--bg-color); border-radius: 4px; padding: 10px;"></canvas><br>
+                        <strong>2.</strong> $P(E \\cap T) = P(E) \\times P_E(T) = ${formatFr(pE)} \\times ${formatFr(pET)} = ${formatFr(inter)}$.<br><br>
+                        <strong>3.</strong> Probabilités totales : $P(T) = P(E \\cap T) + P(A \\cap T) = ${formatFr(inter)} + (${formatFr(pA)} \\times ${formatFr(pAT)}) = ${formatFr(tot)}$.<br><br>
+                        <strong>4.</strong> Formule de Bayes : $P_T(A) = \\dfrac{P(A \\cap T)}{P(T)} = \\dfrac{${formatFr(Math.round(pA*pAT*1000)/1000)}}{${formatFr(tot)}} \\approx ${formatFr(condInv)}$.
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('exam-container').innerHTML = qcmHTML + ex3HTML + ex4HTML;
+            
+            // Réinitialisation de l'affichage
+            slides = document.querySelectorAll('.qcm-slide');
+            currentSlide = 0; clearInterval(timerInterval);
+            document.getElementById('setup-container').style.display = 'flex';
+            
+            let player = document.getElementById('qcm-player');
+            player.style.display = 'none';
+            player.classList.remove('review-mode');
+            document.getElementById('timer-display').innerText = "";
+            
+            if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) { MathJax.typesetPromise().then(() => { setTimeout(drawTree, 100); }); } else { setTimeout(drawTree, 100); }
+        }
+
+        // --- GESTION DU DIAPORAMA QCM ---
+        function startQCM(mode) {
+            let player = document.getElementById('qcm-player');
+            player.classList.remove('review-mode');
+            document.getElementById('setup-container').style.display = 'none';
+            player.style.display = 'block';
+            window.isTimed = (mode === 'timed'); showSlide(0);
+        }
+
+        function showSlide(index) {
+            slides.forEach(s => s.classList.remove('active'));
+            if(index >= 0 && index < slides.length) {
+                slides[index].classList.add('active'); currentSlide = index;
+                document.getElementById('btn-prev').disabled = (currentSlide === 0);
+                document.getElementById('btn-next').innerText = (currentSlide === slides.length - 1) ? "Terminer" : "Suivant";
+                if (window.isTimed) startTimer();
+            } else if (index >= slides.length) {
+                clearInterval(timerInterval); 
+                document.getElementById('timer-display').innerText = "";
+                alert("QCM Terminé ! La correction complète du QCM va s'afficher.");
+                showQCMReview(); 
+            }
+        }
+        function nextSlide() { showSlide(currentSlide + 1); }
+        function prevSlide() { showSlide(currentSlide - 1); }
+
+        function startTimer() {
+            clearInterval(timerInterval); timeLeft = 45;
+            document.getElementById('timer-display').innerText = "Temps restant : " + timeLeft + "s";
+            timerInterval = setInterval(() => {
+                timeLeft--; document.getElementById('timer-display').innerText = "Temps restant : " + timeLeft + "s";
+                if(timeLeft <= 0) { clearInterval(timerInterval); nextSlide(); }
+            }, 1000);
+        }
+
+        function showQCMReview() {
+            clearInterval(timerInterval);
+            let player = document.getElementById('qcm-player');
+            player.style.display = 'block';
+            player.classList.add('review-mode');
+            document.getElementById('timer-display').innerText = "";
+        }
+
+        function drawTree() {
+            const canvas = document.getElementById('prob-tree'); if(!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0,0, canvas.width, canvas.height); ctx.font = '16px sans-serif'; ctx.lineWidth = 2;
+            ctx.fillStyle = document.body.classList.contains('high-contrast') ? '#fff' : '#333';
+            ctx.strokeStyle = document.body.classList.contains('high-contrast') ? '#fff' : '#333';
+            ctx.beginPath();
+            ctx.moveTo(50, 125); ctx.lineTo(150, 60); ctx.moveTo(50, 125); ctx.lineTo(150, 190); 
+            ctx.moveTo(180, 55); ctx.lineTo(280, 25); ctx.moveTo(180, 55); ctx.lineTo(280, 85);  
+            ctx.moveTo(180, 185); ctx.lineTo(280, 155); ctx.moveTo(180, 185); ctx.lineTo(280, 215); 
+            ctx.stroke();
+            ctx.fillText(formatFr(treeData.pE), 85, 80); ctx.fillText(formatFr(treeData.pA), 85, 180);
+            ctx.fillText(formatFr(treeData.pET), 215, 30); ctx.fillText(formatFr(treeData.pE_not), 215, 95);
+            ctx.fillText(formatFr(treeData.pAT), 215, 160); ctx.fillText(formatFr(treeData.pA_not), 215, 225);
+            ctx.font = 'bold 18px sans-serif';
+            ctx.fillText('E', 160, 60); ctx.fillText('A', 160, 195);
+            ctx.fillText('T', 290, 30); ctx.fillText('T\u0304', 290, 90);
+            ctx.fillText('T', 290, 160); ctx.fillText('T\u0304', 290, 220);
+        }
+    </script>
+</body>
+</html>
