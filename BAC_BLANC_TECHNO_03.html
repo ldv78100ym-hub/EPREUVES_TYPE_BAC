@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sujet d'Évaluation Mathématiques</title>
+    
+    <style>
+        :root {
+            --bg-color: #fdfdfd;
+            --text-color: #111111;
+            --primary-color: #0056b3;
+            --secondary-color: #e9ecef;
+            --correct-color: #28a745;
+            --font-main: 'Helvetica', 'Arial', sans-serif;
+            --base-font-size: 1.25rem;
+            --line-height: 1.6;
+            --letter-spacing: 0.05em;
+            --word-spacing: 0.1em;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: var(--line-height);
+            letter-spacing: var(--letter-spacing);
+            word-spacing: var(--word-spacing);
+            font-size: var(--base-font-size);
+            margin: 0;
+            padding: 20px;
+            max-width: 1000px;
+            margin-left: auto;
+            margin-right: auto;
+            transition: all 0.3s ease;
+        }
+
+        /* Accessibilité : Mode Dys */
+        body.dys-mode {
+            --font-main: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+            --line-height: 2;
+            --letter-spacing: 0.15em;
+            --word-spacing: 0.3em;
+        }
+
+        /* Accessibilité : Mode Malvoyant */
+        body.malvoyant-mode {
+            --bg-color: #000000;
+            --text-color: #ffff00;
+            --primary-color: #4da6ff;
+            --secondary-color: #333333;
+            --base-font-size: 1.75rem;
+            --line-height: 1.8;
+        }
+
+        h1, h2, h3 { color: var(--primary-color); line-height: 1.3; }
+        .malvoyant-mode h1, .malvoyant-mode h2, .malvoyant-mode h3 { color: #ffffff; }
+
+        .controls {
+            background: var(--secondary-color);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            font-family: var(--font-main);
+            font-size: 1.1rem;
+            padding: 10px 20px;
+            border: 2px solid transparent;
+            border-radius: 5px;
+            background-color: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover { background-color: #004494; }
+        button:focus { outline: 3px solid #ffc107; outline-offset: 2px; }
+        
+        .malvoyant-mode button { border: 2px solid #ffff00; color: #000; background-color: #ffff00; }
+        .malvoyant-mode button:hover { background-color: #cccc00; }
+
+        .btn-access { background-color: #6c757d; }
+        .btn-access:hover { background-color: #5a6268; }
+
+        .qcm-choices {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 10px;
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .qcm-choices li {
+            background: var(--secondary-color);
+            padding: 10px 15px;
+            border-radius: 5px;
+            min-width: 120px;
+        }
+
+        .exercice {
+            background: var(--bg-color);
+            border: 2px solid var(--secondary-color);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        /* --- Apparence stricte TikZ (tkz-tab) --- */
+        .tkz-table {
+            border-collapse: collapse;
+            border: 1px solid currentColor;
+            margin: 20px auto;
+            background-color: transparent;
+            font-size: 1.1em;
+            width: 100%;
+            max-width: 500px;
+        }
+        .tkz-table td {
+            text-align: center;
+            vertical-align: middle;
+            padding: 8px 10px;
+        }
+        .tkz-table tr:first-child { border-bottom: 1px solid currentColor; }
+        .tkz-table tr.tkz-mid-row { border-bottom: 1px solid currentColor; }
+        .tkz-table td:first-child { border-right: 1px solid currentColor; width: 70px; font-weight: bold; }
+        
+        .col-root { width: 30px; padding: 0 !important; }
+        .dash-container { position: relative; min-height: 40px; display: flex; align-items: center; justify-content: center; }
+        .dash-line { position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px dashed currentColor; z-index: 0; }
+        .dash-val { position: relative; z-index: 1; background: var(--bg-color); padding: 2px; }
+
+        .var-container { position: relative; height: 100px; width: 100%; }
+        .var-svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        .var-val { position: absolute; z-index: 1; transform: translateX(-50%); background: var(--bg-color); padding: 0 5px; }
+        .var-top { top: 5px; }
+        .var-bot { bottom: 5px; }
+
+        /* Impression et Corrigé avec astuce pour MathJax */
+        #exam-correction-container {
+            position: absolute;
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        @media print {
+            body { font-size: 12pt; background: white; color: black; max-width: 100%; padding: 0; }
+            .controls, #qcm-modal, #qcm-config-modal, #copyright-modal { display: none !important; }
+            .exercice { box-shadow: none; border: none; page-break-inside: avoid; }
+            h2 { page-break-after: avoid; }
+            
+            #exam-correction-container {
+                position: static !important;
+                visibility: visible !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+                display: block !important;
+                page-break-before: always;
+            }
+            * { color: black !important; background: transparent !important; }
+            .dash-val, .var-val { background: white !important; }
+        }
+
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8); overflow: auto;
+        }
+        .modal-content {
+            background-color: var(--bg-color); margin: 5% auto; padding: 30px;
+            border-radius: 10px; max-width: 800px; position: relative; color: var(--text-color);
+        }
+        .close-btn { color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer; }
+        .close-btn:hover { color: var(--text-color); }
+
+        #qcm-slide-container { font-size: 1.5rem; text-align: center; margin-top: 30px; min-height: 400px; }
+        .qcm-slide-choices { display: flex; flex-direction: column; gap: 15px; margin-top: 30px; align-items: center; }
+        .qcm-slide-choices div { background: var(--secondary-color); width: 80%; padding: 15px; border-radius: 8px; font-weight: bold; }
+        #timer-bar-container { width: 100%; background-color: #ddd; height: 20px; border-radius: 10px; margin-top: 20px; display: none; }
+        #timer-bar { height: 100%; background-color: var(--primary-color); border-radius: 10px; width: 100%; transition: width 1s linear; }
+        .qcm-nav-btns { margin-top: 30px; display: flex; justify-content: center; gap: 20px; }
+        .code-block { background: var(--secondary-color); padding: 15px; border-radius: 5px; font-family: monospace; text-align: left; display: inline-block; }
+    </style>
+
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        generateExam();
+                    });
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+
+    <div class="controls">
+        <button onclick="generateExam()" aria-label="Nouveau Sujet">Nouveau Sujet</button>
+        <button onclick="window.print()" aria-label="Imprimer">Imprimer PDF (Sujet + Corrigé)</button>
+        <button onclick="openQcmConfig()" aria-label="Diaporama QCM">Lancer QCM au tableau</button>
+        <button onclick="toggleDys()" class="btn-access" aria-label="Activer/Désactiver le mode Dyslexique">Mode Dys</button>
+        <button onclick="toggleMalvoyant()" class="btn-access" aria-label="Activer/Désactiver le mode Malvoyant">Mode Malvoyant</button>
+        <button onclick="showCopyright()" aria-label="Droits d'auteur">Droits d'auteur</button>
+    </div>
+
+    <div id="exam-content"></div>
+    <div id="exam-correction-container"></div>
+
+    <div id="copyright-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('copyright-modal')">&times;</span>
+            <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Avril 2026</p>
+            <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+            <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Sujet d'Évaluation Mathématiques') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            <p><strong>Conditions :</strong></p>
+            <ul>
+                <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+            </ul>
+            <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+        </div>
+    </div>
+
+    <div id="qcm-config-modal" class="modal">
+        <div class="modal-content" style="text-align: center;">
+            <span class="close-btn" onclick="closeModal('qcm-config-modal')">&times;</span>
+            <h2>Configuration du Diaporama QCM</h2>
+            <p>Choisissez le mode de passage des questions :</p>
+            <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+                <button onclick="startQcmMode(true)">Avec Minuteur (60s/question)</button>
+                <button onclick="startQcmMode(false)">Mode Manuel</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="qcm-modal" class="modal">
+        <div class="modal-content" style="max-width: 90%; height: 80vh; display: flex; flex-direction: column;">
+            <span class="close-btn" onclick="closeQcmMode()">&times;</span>
+            <h2 id="qcm-slide-title">Question</h2>
+            <div id="timer-bar-container"><div id="timer-bar"></div></div>
+            <div id="qcm-slide-container"></div>
+            <div class="qcm-nav-btns" id="qcm-nav-btns">
+                <button onclick="prevQcmSlide()">Précédent</button>
+                <button onclick="nextQcmSlide()">Suivant</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Accessibilité & Canvas ---
+        function toggleDys() { document.body.classList.toggle('dys-mode'); renderAllCanvas(); }
+        function toggleMalvoyant() { document.body.classList.toggle('malvoyant-mode'); renderAllCanvas(); }
+
+        // --- Moteur de Rendu Canvas ---
+        function renderAllCanvas() {
+            document.querySelectorAll('.math-curve').forEach(canvas => {
+                let type = parseInt(canvas.getAttribute('data-type'));
+                let a = parseFloat(canvas.getAttribute('data-a'));
+                let b = parseFloat(canvas.getAttribute('data-b'));
+                let c = parseFloat(canvas.getAttribute('data-c')) || 0;
+                let d = parseFloat(canvas.getAttribute('data-d')) || 0;
+                
+                let ctx = canvas.getContext('2d');
+                let w = canvas.width;
+                let h = canvas.height;
+                ctx.clearRect(0, 0, w, h);
+                
+                let isMalvoyant = document.body.classList.contains('malvoyant-mode');
+                
+                ctx.fillStyle = isMalvoyant ? "#000000" : "#ffffff";
+                ctx.fillRect(0, 0, w, h);
+                
+                let unit = 30;
+                let cx = w / 2;
+                let cy = h / 2;
+                
+                // 1. Quadrillage fin
+                ctx.beginPath();
+                ctx.strokeStyle = isMalvoyant ? "#333333" : "#e9ecef";
+                ctx.lineWidth = 1;
+                for(let x = 0; x <= w; x += unit/2) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+                for(let y = 0; y <= h; y += unit/2) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+                ctx.stroke();
+
+                ctx.beginPath();
+                ctx.strokeStyle = isMalvoyant ? "#555555" : "#ced4da";
+                ctx.lineWidth = 1.5;
+                for(let x = cx % unit; x <= w; x += unit) { ctx.moveTo(x, 0); ctx.lineTo(x, h); }
+                for(let y = cy % unit; y <= h; y += unit) { ctx.moveTo(0, y); ctx.lineTo(w, y); }
+                ctx.stroke();
+
+                // 2. Axes avec flèches
+                ctx.beginPath();
+                ctx.strokeStyle = isMalvoyant ? "#ffff00" : "#111111";
+                ctx.lineWidth = isMalvoyant ? 3 : 2;
+                ctx.moveTo(0, cy); ctx.lineTo(w, cy);
+                ctx.lineTo(w - 8, cy - 5);
+                ctx.moveTo(w, cy); ctx.lineTo(w - 8, cy + 5);
+                ctx.moveTo(cx, h); ctx.lineTo(cx, 0);
+                ctx.lineTo(cx - 5, 8);
+                ctx.moveTo(cx, 0); ctx.lineTo(cx + 5, 8);
+                ctx.stroke();
+                
+                // 3. Repère
+                ctx.fillStyle = isMalvoyant ? "#ffff00" : "#111111";
+                ctx.font = "bold 14px sans-serif";
+                ctx.fillText("1", cx + unit - 4, cy + 20);
+                ctx.fillText("1", cx - 18, cy - unit + 5);
+                ctx.fillText("0", cx - 14, cy + 18);
+                
+                // 4. Tracé de la fonction
+                ctx.beginPath();
+                ctx.strokeStyle = isMalvoyant ? "#4da6ff" : "#0056b3";
+                ctx.lineWidth = isMalvoyant ? 4 : 2.5;
+                
+                for (let px = 0; px <= w; px++) {
+                    let x = (px - cx) / unit;
+                    let y = 0;
+                    if (type === 0) y = a * x + b; // Droite
+                    else if (type === 1) y = a * x * x + b; // Parabole
+                    else if (type === 2) y = a * x * x * x + c * x + d; // Cubique
+                    
+                    let py = cy - y * unit;
+                    if (px === 0) ctx.moveTo(px, py);
+                    else ctx.lineTo(px, py);
+                }
+                ctx.stroke();
+            });
+        }
+
+        // --- Utilitaires ---
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function randChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+        function gcd(a, b) { return b === 0 ? Math.abs(a) : gcd(b, a % b); }
+        function buildTerm(n, d, p) {
+            if (n === 0) return null;
+            let sign = (n * d < 0) ? -1 : 1;
+            n = Math.abs(n); d = Math.abs(d);
+            let g = gcd(n, d); n /= g; d /= g;
+            return { sign, n, d, p };
+        }
+        function polyToStr(terms) {
+            let str = "";
+            let first = true;
+            for (let t of terms) {
+                if (!t) continue;
+                let coef = "";
+                if (t.d === 1) { if (t.n !== 1 || t.p === 0) coef = t.n; } 
+                else { coef = "\\dfrac{" + t.n + "}{" + t.d + "}"; }
+                let varStr = t.p === 1 ? "x" : (t.p > 1 ? "x^" + t.p : "");
+                if (first) { str += (t.sign < 0 ? "-" : "") + coef + varStr; first = false; } 
+                else { str += (t.sign < 0 ? " - " : " + ") + coef + varStr; }
+            }
+            return str || "0";
+        }
+
+        // --- GÉNÉRATEURS REQUIS : TABLEAUX TikZ ET GRAPHIQUES ---
+        function genRequiredSignTable() {
+            let r = randInt(-5, 5);
+            let signLeft = randChoice(['+', '-']);
+            let signRight = signLeft === '+' ? '-' : '+';
+            let varStr = signLeft === '+' ? `strictement positif` : `strictement négatif`;
+            let ans = signLeft === '+' ? `$]-\\infty ; ${r}[$` : `$]${r} ; +\\infty[$`;
+            
+            let html = `
+            <table class="tkz-table">
+                <tr>
+                    <td>$x$</td>
+                    <td style="text-align: left; padding-left: 20px;">$-\\infty$</td>
+                    <td class="col-root">$${r}$</td>
+                    <td style="text-align: right; padding-right: 20px;">$+\\infty$</td>
+                </tr>
+                <tr>
+                    <td>$f(x)$</td>
+                    <td>$${signLeft}$</td>
+                    <td class="col-root">
+                        <div class="dash-container"><div class="dash-line"></div><div class="dash-val">$0$</div></div>
+                    </td>
+                    <td>$${signRight}$</td>
+                </tr>
+            </table>`;
+            return {
+                question: `À l'aide du tableau de signes ci-dessous, déterminer sur quel intervalle la fonction $f$ est ${varStr}. ${html}`,
+                trueAnswer: ans,
+                distractors: [`$]${r} ; +\\infty[$`, `$]-\\infty ; ${r}[$`, `$[${r} ; +\\infty[$`, `\\]-\\infty ; +\\infty\\[`].filter(d => d !== ans).slice(0,4)
+            };
+        }
+
+        function genRequiredVarTable() {
+            let xMin = randInt(-5, -2), xMax = randInt(3, 6);
+            let xSommet = randInt(xMin + 1, xMax - 1);
+            let type = randChoice(['max', 'min']); 
+            
+            let ySommet, yMin, yMax, arr1, arr2;
+            
+            if (type === 'max') {
+                ySommet = randInt(2, 8); yMin = randInt(-4, ySommet - 2); yMax = randInt(-4, ySommet - 2);
+                arr1 = `<line x1="20%" y1="85%" x2="45%" y2="15%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-up)"/>`;
+                arr2 = `<line x1="55%" y1="15%" x2="80%" y2="85%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-down)"/>`;
+            } else {
+                ySommet = randInt(-8, -2); yMin = randInt(ySommet + 2, 4); yMax = randInt(ySommet + 2, 4);
+                arr1 = `<line x1="20%" y1="15%" x2="45%" y2="85%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-down)"/>`;
+                arr2 = `<line x1="55%" y1="85%" x2="80%" y2="15%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-up)"/>`;
+            }
+            
+            let posMin = type === 'max' ? 'var-bot' : 'var-top';
+            let posMax = type === 'max' ? 'var-top' : 'var-bot';
+
+            let html = `
+            <table class="tkz-table">
+                <tr>
+                    <td>$x$</td>
+                    <td style="text-align: left; padding-left: 20px;">$${xMin}$</td>
+                    <td style="width: 20px;">$${xSommet}$</td>
+                    <td style="text-align: right; padding-right: 20px;">$${xMax}$</td>
+                </tr>
+                <tr>
+                    <td>$f(x)$</td>
+                    <td colspan="3" style="padding: 0;">
+                        <div class="var-container">
+                            <div class="var-val ${posMin}" style="left: 15%;">$${yMin}$</div>
+                            <div class="var-val ${posMax}" style="left: 50%;">$${ySommet}$</div>
+                            <div class="var-val ${posMin}" style="left: 85%;">$${yMax}$</div>
+                            <svg class="var-svg">
+                                <defs>
+                                    <marker id="arrow-up" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="currentColor" /></marker>
+                                    <marker id="arrow-down" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="currentColor" /></marker>
+                                </defs>
+                                ${arr1}${arr2}
+                            </svg>
+                        </div>
+                    </td>
+                </tr>
+            </table>`;
+            
+            let term = type === 'max' ? "maximum" : "minimum";
+            return {
+                question: `Le tableau de variations de la fonction $f$ est donné ci-dessous. Quel est le ${term} de la fonction $f$ sur l'intervalle $[${xMin} ; ${xMax}]$ ? ${html}`,
+                trueAnswer: `$${ySommet}$`,
+                distractors: [`$${xSommet}$`, `$${yMin}$`, `$${yMax}$`, `$${xMax}$`]
+            };
+        }
+
+        function genRequiredCurveCanvas() {
+            let type = randChoice([0, 1, 2]); 
+            let k = randInt(-3, 3);
+            let a, c, d;
+            
+            if (type === 0) { a = randChoice([-1.5, -1, -0.5, 0.5, 1, 1.5]); d = k; } 
+            else if (type === 1) { a = randChoice([-1, -0.5, 0.5, 1]); d = k; } 
+            else { a = randChoice([-0.2, 0.2]); c = randChoice([1, 2]); d = k; }
+
+            let html = `
+            <div style="display: flex; justify-content: center; margin: 15px 0;">
+              <canvas class="math-curve" data-type="${type}" data-a="${a}" data-b="${d}" data-c="${c}" data-d="${d}" width="300" height="300" style="border: 1px solid currentColor; border-radius: 5px;"></canvas>
+            </div>`;
+            return {
+                question: `La courbe représentative $\\mathcal{C}_f$ d'une fonction $f$ est tracée ci-dessous dans un repère avec un quadrillage dont l'unité est matérialisée par deux carreaux. Que vaut $f(0)$ ? ${html}`,
+                trueAnswer: `$${k}$`,
+                distractors: [`$0$`, `$${k + 1}$`, `$${k - 1}$`, `$${k > 0 ? -k : k + 2}$`]
+            };
+        }
+
+        const qcmGenerators = [
+            function genFractions() {
+                let n1 = randInt(3, 7), d1 = randChoice([4, 6, 8]);
+                let n2 = randInt(1, 3), d2 = randChoice([2, 3]);
+                let num = n1 * d2 - n2 * d1; let den = d1 * d2;
+                return { question: `Le calcul de l'expression $\\dfrac{${n1}}{${d1}} - \\dfrac{${n2}}{${d2}}$ donne :`, trueAnswer: `$\\dfrac{${num}}{${den}}$`, distractors: [`$\\dfrac{${n1 - n2}}{${d1 - d2}}$`, `$\\dfrac{${n1 + n2}}{${d1 + d2}}$`, `$\\dfrac{${n1 * d2 + n2 * d1}}{${den}}$`, `$\\dfrac{${n1 - n2}}{${den}}$`] };
+            },
+            function genPuissances() {
+                let base = randInt(2, 5), p1 = randInt(-5, 2), p2 = randInt(3, 8);
+                return { question: `L'expression $${base}^{${p1}} \\times ${base}^{${p2}}$ est égale à :`, trueAnswer: `$${base}^{${p1 + p2}}$`, distractors: [`$${base}^{${p1 * p2}}$`, `$${base*base}^{${p1 + p2}}$`, `$${base}^{${p2 - p1}}$`, `$${base*2}^{${p1 * p2}}$`] };
+            },
+            function genDeveloppement() {
+                let a = randInt(2, 4), b = randInt(2, 5);
+                return { question: `L'expression développée de $(${a}x - ${b})^2$ est :`, trueAnswer: `$${a*a}x^2 - ${2*a*b}x + ${b*b}$`, distractors: [`$${a*a}x^2 - ${b*b}$`, `$${a*a}x^2 + ${2*a*b}x - ${b*b}$`, `$${a*a}x^2 - ${a*b}x + ${b*b}$`, `$${a*a}x^2 + ${b*b}$`] };
+            },
+            function genCanonique() {
+                let alpha = randInt(-4, 4), beta = randInt(-5, 5), a = randChoice([-2, -1, 1, 2]);
+                let signA = a > 0 ? "minimum" : "maximum";
+                let signAlpha = alpha < 0 ? `+ ${-alpha}` : `- ${alpha}`;
+                if (alpha === 0) signAlpha = ""; else signAlpha = `(x ${signAlpha})^2`;
+                let eq = alpha === 0 ? `$f(x) = ${a === 1 ? "" : (a === -1 ? "-" : a)}x^2 ${beta >= 0 ? '+ '+beta : beta}$` : `$f(x) = ${a === 1 ? "" : (a === -1 ? "-" : a)}${signAlpha} ${beta >= 0 ? '+ '+beta : beta}$`;
+                return { question: `Soit la fonction $f$ définie par ${eq}. La fonction $f$ admet un :`, trueAnswer: `$${signA}$ en $x = ${alpha}$`, distractors: [`$${signA}$ en $x = ${-alpha}$`, `$${a > 0 ? "maximum" : "minimum"}$ en $x = ${alpha}$`, `$${signA}$ en $x = ${beta}$`, `$${a > 0 ? "maximum" : "minimum"}$ en $x = ${beta}$`] };
+            }
+        ];
+
+        let qcmData = [], ex2Data = {}, ex3Data = {}, ex4Data = {};
+        let qcmSlideIndex = 0, qcmTimer = null, qcmTimeLeft = 60, isQcmTimed = false;
+
+        function generateExam() {
+            generateQcmData();
+            generateEx2Data();
+            generateEx3Data();
+            generateEx4Data();
+            renderExam();
+            renderAllCanvas();
+            if (window.MathJax && window.MathJax.typesetPromise) {
+                MathJax.typesetPromise().catch((err) => console.log('MathJax error: ', err));
+            }
+        }
+
+        function generateQcmData() {
+            qcmData = [];
+            let requiredGenerators = [genRequiredSignTable, genRequiredVarTable, genRequiredCurveCanvas];
+            let additionalGenerators = shuffle([...qcmGenerators, ...qcmGenerators]).slice(0, 7); 
+            let selectedGenerators = shuffle([...requiredGenerators, ...additionalGenerators]);
+            let correctLetters = shuffle(['A', 'A', 'B', 'B', 'C', 'C', 'D', 'D', 'E', 'E']);
+
+            selectedGenerators.forEach((genFunc, i) => {
+                let qData = genFunc();
+                let targetLetter = correctLetters[i];
+                let choices = { A: "", B: "", C: "", D: "", E: "Autre" };
+                let dists = shuffle([...qData.distractors]);
+
+                if (targetLetter === 'E') {
+                    choices.A = dists[0]; choices.B = dists[1]; choices.C = dists[2]; choices.D = dists[3];
+                } else {
+                    let availableKeys = ['A', 'B', 'C', 'D'].filter(k => k !== targetLetter);
+                    choices[targetLetter] = qData.trueAnswer;
+                    choices[availableKeys[0]] = dists[0];
+                    choices[availableKeys[1]] = dists[1];
+                    choices[availableKeys[2]] = dists[2];
+                }
+                
+                qcmData.push({ question: qData.question, trueAnswer: qData.trueAnswer, choices: choices, correctLetter: targetLetter });
+            });
+        }
+
+        function generateEx2Data() {
+            let base = randInt(300, 700), p = randInt(2, 8), year = 2024;
+            let q = 1 + p / 100, target = base + randInt(150, 300);
+            let pythonType = randChoice([0, 1, 2, 3]); // Type de question Python aléatoire
+            let w6 = Math.round(base * Math.pow(q, 6)); // Pour la question 4 et la conversion for/while
+            
+            ex2Data = { base, p, year, q, target, pythonType, w6 };
+        }
+
+        function generateEx3Data() {
+            let x1 = randInt(-2, 2), x2 = x1 + randInt(1, 3);
+            let k = randChoice([-3, -2, -1, 1, 2, 3]), d = randInt(-5, 5); 
+            let t3 = buildTerm(k, 3, 3), t2 = buildTerm(-k * (x1 + x2), 2, 2), t1 = buildTerm(k * x1 * x2, 1, 1), t0 = buildTerm(d, 1, 0);
+            let g_str = polyToStr([t3, t2, t1, t0]);
+            let dt2 = buildTerm(k, 1, 2), dt1 = buildTerm(-k * (x1 + x2), 1, 1), dt0 = buildTerm(k * x1 * x2, 1, 0);
+            let gp_str = polyToStr([dt2, dt1, dt0]);
+            let factor = k === 1 ? "" : (k === -1 ? "-" : k);
+            let rx1 = x1 > 0 ? ` - ${x1}` : (x1 < 0 ? ` + ${-x1}` : "");
+            let rx2 = x2 > 0 ? ` - ${x2}` : (x2 < 0 ? ` + ${-x2}` : "");
+            let fact_str = `${factor}${x1===0 ? "x" : `(x${rx1})`}${x2===0 ? "x" : `(x${rx2})`}`;
+            if(x1 === 0 && x2 === 0) fact_str = `${factor}x^2`;
+            let g1_num = k*2 - k*(x1+x2)*3 + k*x1*x2*6 + d*6;
+            let g1_str = polyToStr([buildTerm(g1_num, 6, 0)]);
+            let gp1_num = k - k*(x1+x2) + k*x1*x2;
+            let gp1_str = polyToStr([buildTerm(gp1_num, 1, 0)]);
+            let b_tangent = buildTerm(g1_num - gp1_num * 6, 6, 0);
+            let eq_tangent = polyToStr([ buildTerm(gp1_num, 1, 1), b_tangent ]);
+            ex3Data = { g_str, gp_str, fact_str, k, x1, x2, minX: x1 - 2, maxX: x2 + 2, g1_str, gp1_str, eq_tangent };
+        }
+
+        function generateEx4Data() {
+            let pE = randInt(55, 75), pA = 100 - pE, ptE = randInt(25, 45), ptA = randInt(15, 30); 
+            ex4Data = { pE, pA, ptE, ptA };
+        }
+
+        function renderExam() {
+            // --- Préparation du bloc Python dynamique pour l'Ex2 ---
+            let pythonQuestionHtml = "";
+            let pythonCorrectionHtml = "";
+
+            if (ex2Data.pythonType === 0) {
+                pythonQuestionHtml = `On donne l'algorithme suivant en Python :
+                    <div class="code-block">
+def seuil():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;w = ${ex2Data.base}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;while w < ${ex2Data.target}:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;w = w * ${ex2Data.q.toFixed(2)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n = n + 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return ${ex2Data.year} + n
+                    </div>
+                    <br>Que renvoie l'exécution de cette fonction ? Interpréter ce résultat dans le contexte de l'exercice.`;
+                pythonCorrectionHtml = `L'algorithme calcule et renvoie l'année à partir de laquelle la production dépassera ${ex2Data.target} chaises.`;
+            } 
+            else if (ex2Data.pythonType === 1) {
+                pythonQuestionHtml = `Compléter la fonction Python ci-dessous pour qu'elle détermine et renvoie l'année à partir de laquelle la production dépassera ${ex2Data.target} chaises :
+                    <div class="code-block">
+def seuil():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;w = ${ex2Data.base}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;n = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;while w < ......... :<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;w = .........<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;n = .........<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return ${ex2Data.year} + n
+                    </div>`;
+                pythonCorrectionHtml = `Lignes complétées :<br><code>while w < ${ex2Data.target}:</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;w = w * ${ex2Data.q.toFixed(2)}</code><br><code>&nbsp;&nbsp;&nbsp;&nbsp;n = n + 1</code>`;
+            }
+            else if (ex2Data.pythonType === 2) {
+                pythonQuestionHtml = `On donne la fonction Python suivante permettant de calculer la production au bout de 6 ans (variable de boucle <code>while</code>) :
+                    <div class="code-block">
+def calcul_w6():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;w = ${ex2Data.base}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;i = 0<br>
+&nbsp;&nbsp;&nbsp;&nbsp;while i < 6:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;w = w * ${ex2Data.q.toFixed(2)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i = i + 1<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return w
+                    </div>
+                    <br>Réécrire cette fonction en remplaçant la boucle <code>while</code> par une boucle <code>for</code>.`;
+                pythonCorrectionHtml = `Avec une boucle for :<br><div class="code-block">def calcul_w6():<br>&nbsp;&nbsp;&nbsp;&nbsp;w = ${ex2Data.base}<br>&nbsp;&nbsp;&nbsp;&nbsp;for i in range(6):<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;w = w * ${ex2Data.q.toFixed(2)}<br>&nbsp;&nbsp;&nbsp;&nbsp;return w</div>`;
+            }
+            else {
+                pythonQuestionHtml = `On donne la fonction Python suivante permettant de calculer la production au bout de 6 ans (boucle <code>for</code>) :
+                    <div class="code-block">
+def calcul_w6():<br>
+&nbsp;&nbsp;&nbsp;&nbsp;w = ${ex2Data.base}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;for i in range(6):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;w = w * ${ex2Data.q.toFixed(2)}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;return w
+                    </div>
+                    <br>Réécrire cette fonction en remplaçant la boucle <code>for</code> par une boucle <code>while</code>.`;
+                pythonCorrectionHtml = `Avec une boucle while :<br><div class="code-block">def calcul_w6():<br>&nbsp;&nbsp;&nbsp;&nbsp;w = ${ex2Data.base}<br>&nbsp;&nbsp;&nbsp;&nbsp;i = 0<br>&nbsp;&nbsp;&nbsp;&nbsp;while i < 6:<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;w = w * ${ex2Data.q.toFixed(2)}<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;i = i + 1<br>&nbsp;&nbsp;&nbsp;&nbsp;return w</div>`;
+            }
+
+
+            let content = `
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <h1>Sujet d'Évaluation Mathématiques</h1>
+                    <p><strong>Classe de Première Technologique</strong></p>
+                </div>
+                
+                <div class="exercice">
+                    <h2>Partie 1 : Automatismes et Suites</h2>
+                    <h3>Exercice 1 : QCM (10 points)</h3>
+                    <p><em>Pour chaque question, une seule des cinq réponses proposées est exacte. Aucune justification n'est demandée.</em></p>
+                    <ol>
+            `;
+
+            qcmData.forEach((q, i) => {
+                content += `
+                    <li style="margin-bottom: 20px; page-break-inside: avoid;">
+                        ${q.question}
+                        <ul class="qcm-choices">
+                            <li><strong>A :</strong> ${q.choices.A}</li>
+                            <li><strong>B :</strong> ${q.choices.B}</li>
+                            <li><strong>C :</strong> ${q.choices.C}</li>
+                            <li><strong>D :</strong> ${q.choices.D}</li>
+                            <li><strong>E :</strong> ${q.choices.E}</li>
+                        </ul>
+                    </li>
+                `;
+            });
+
+            content += `
+                    </ol>
+                </div>
+
+                <div class="exercice">
+                    <h3>Exercice 2 : Suites numériques (10 points)</h3>
+                    <p>Un artisan fabrique des chaises en bois. En ${ex2Data.year}, il a produit ${ex2Data.base} chaises. À la suite d'un investissement, il prévoit que sa production augmentera de ${ex2Data.p} \\% chaque année.</p>
+                    <p>On modélise le nombre de chaises produites au cours de l'année $${ex2Data.year} + n$ par une suite $(w_n)$. Ainsi, on a $w_0 = ${ex2Data.base}$.</p>
+                    <ol>
+                        <li>Calculer le nombre de chaises que l'artisan prévoit de produire en ${ex2Data.year + 1}.</li>
+                        <li>Déterminer la nature de la suite $(w_n)$ en précisant sa raison.</li>
+                        <li>Exprimer $w_n$ en fonction de $n$.</li>
+                        <li>Selon ce modèle, combien de chaises l'artisan produira-t-il en ${ex2Data.year + 6} ? (Arrondir à l'entier près).</li>
+                        <li>${pythonQuestionHtml}</li>
+                    </ol>
+                </div>
+
+                <div class="exercice">
+                    <h2>Partie 2 : Analyse et Probabilités</h2>
+                    <h3>Exercice 3 : Étude de fonction (10 points)</h3>
+                    <p>Soit la fonction $g$ définie sur l'intervalle $[${ex3Data.minX} ; ${ex3Data.maxX}]$ par $g(x) = ${ex3Data.g_str}$. On note $\\mathcal{C}_g$ sa courbe représentative dans un repère.</p>
+                    <ol>
+                        <li>Calculer l'expression de la fonction dérivée $g'(x)$.</li>
+                        <li>Montrer que $g'(x) = ${ex3Data.fact_str}$.</li>
+                        <li>Étudier le signe de $g'(x)$ sur l'intervalle $[${ex3Data.minX} ; ${ex3Data.maxX}]$ et en déduire le tableau de variations de la fonction $g$ sur ce même intervalle.</li>
+                        <li>Déterminer l'équation réduite de la tangente $T$ à la courbe $\\mathcal{C}_g$ au point d'abscisse $1$.</li>
+                    </ol>
+                </div>
+
+                <div class="exercice">
+                    <h3>Exercice 4 : Probabilités conditionnelles (10 points)</h3>
+                    <p>Dans un lycée, ${ex4Data.pE} \\% des élèves étudient l'espagnol en LV2 et ${ex4Data.pA} \\% étudient l'allemand. Parmi les élèves étudiant l'espagnol, ${ex4Data.ptE} \\% font partie du club de théâtre de l'établissement. Parmi les élèves étudiant l'allemand, ${ex4Data.ptA} \\% font partie de ce même club.</p>
+                    <p>On choisit un élève au hasard. On note :</p>
+                    <ul>
+                        <li>$E$ l'événement "l'élève étudie l'espagnol" ;</li>
+                        <li>$A$ l'événement "l'élève étudie l'allemand" ;</li>
+                        <li>$T$ l'événement "l'élève fait du théâtre".</li>
+                    </ul>
+                    <ol>
+                        <li>Modéliser la situation par un arbre pondéré.</li>
+                        <li>Calculer la probabilité de l'événement $E \\cap T$. Interpréter ce résultat.</li>
+                        <li>Calculer la probabilité qu'un élève choisi au hasard fasse du théâtre.</li>
+                        <li>Sachant que l'élève choisi fait du théâtre, quelle est la probabilité qu'il étudie l'allemand ? On donnera le résultat sous forme de fraction ou arrondi à $10^{-3}$.</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('exam-content').innerHTML = content;
+
+            // Variables pour le tableau de signes final (Ex 3)
+            let s1 = ex3Data.k > 0 ? "+" : "-";
+            let s2 = ex3Data.k > 0 ? "-" : "+";
+            let s3 = ex3Data.k > 0 ? "+" : "-";
+            let arr1 = ex3Data.k > 0 ? `<line x1="10%" y1="85%" x2="40%" y2="15%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-up)"/>` : `<line x1="10%" y1="15%" x2="40%" y2="85%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-down)"/>`;
+            let arr2 = ex3Data.k > 0 ? `<line x1="45%" y1="15%" x2="65%" y2="85%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-down)"/>` : `<line x1="45%" y1="85%" x2="65%" y2="15%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-up)"/>`;
+            let arr3 = ex3Data.k > 0 ? `<line x1="70%" y1="85%" x2="95%" y2="15%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-up)"/>` : `<line x1="70%" y1="15%" x2="95%" y2="85%" stroke="currentColor" stroke-width="1.5" marker-end="url(#arrow-down)"/>`;
+            let posA = ex3Data.k > 0 ? "var-bot" : "var-top";
+            let posB = ex3Data.k > 0 ? "var-top" : "var-bot";
+
+            let correction = `
+                <div>
+                    <h1>Correction du Sujet</h1>
+                    <h2>Partie 1 : QCM</h2>
+                    <ul>
+            `;
+            qcmData.forEach((q, i) => {
+                let ansText = q.correctLetter === 'E' ? q.trueAnswer : q.choices[q.correctLetter];
+                correction += `<li><strong>Question ${i+1} : Réponse ${q.correctLetter}</strong> (${ansText})</li>`;
+            });
+            
+            let w1 = Math.round(ex2Data.base * ex2Data.q);
+            let pInter = (ex4Data.pE/100) * (ex4Data.ptE/100);
+            let pT = pInter + (ex4Data.pA/100) * (ex4Data.ptA/100);
+
+            correction += `
+                    </ul>
+                    <h2>Partie 1 : Suites</h2>
+                    <ol>
+                        <li>En ${ex2Data.year + 1} : $${ex2Data.base} \\times ${ex2Data.q.toFixed(2)} = ${w1}$ chaises.</li>
+                        <li>La suite $(w_n)$ est géométrique de raison $q = ${ex2Data.q.toFixed(2)}$ et $w_0 = ${ex2Data.base}$.</li>
+                        <li>$w_n = ${ex2Data.base} \\times ${ex2Data.q.toFixed(2)}^n$.</li>
+                        <li>$w_6 = ${ex2Data.base} \\times ${ex2Data.q.toFixed(2)}^6 \\approx ${ex2Data.w6}$ chaises.</li>
+                        <li>${pythonCorrectionHtml}</li>
+                    </ol>
+                    <h2>Partie 2 : Analyse et Probabilités</h2>
+                    <h3>Exercice 3</h3>
+                    <ol>
+                        <li>$g'(x) = ${ex3Data.gp_str}$.</li>
+                        <li>En développant l'expression $${ex3Data.fact_str}$, on retrouve bien $${ex3Data.gp_str} = g'(x)$.</li>
+                        <li>$g'(x)$ s'annule en $${ex3Data.x1}$ et $${ex3Data.x2}$. Le coefficient dominant est $${ex3Data.k}$. 
+                            <table class="tkz-table" style="margin-top: 15px;">
+                                <tr>
+                                    <td>$x$</td>
+                                    <td style="text-align: left; padding-left: 10px;">$${ex3Data.minX}$</td>
+                                    <td class="col-root">$${ex3Data.x1}$</td>
+                                    <td class="col-root">$${ex3Data.x2}$</td>
+                                    <td style="text-align: right; padding-right: 10px;">$${ex3Data.maxX}$</td>
+                                </tr>
+                                <tr class="tkz-mid-row">
+                                    <td>$g'(x)$</td>
+                                    <td>$${s1}$</td>
+                                    <td class="col-root"><div class="dash-container"><div class="dash-line"></div><div class="dash-val">$0$</div></div></td>
+                                    <td>$${s2}$</td>
+                                    <td class="col-root"><div class="dash-container"><div class="dash-line"></div><div class="dash-val">$0$</div></div></td>
+                                    <td>$${s3}$</td>
+                                </tr>
+                                <tr>
+                                    <td>$g(x)$</td>
+                                    <td colspan="5" style="padding: 0;">
+                                        <div class="var-container">
+                                            <div class="var-val ${posA}" style="left: 5%;">...</div>
+                                            <div class="var-val ${posB}" style="left: 40%;">...</div>
+                                            <div class="var-val ${posA}" style="left: 70%;">...</div>
+                                            <div class="var-val ${posB}" style="left: 95%;">...</div>
+                                            <svg class="var-svg">
+                                                <defs>
+                                                    <marker id="arrow-up" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="currentColor" /></marker>
+                                                    <marker id="arrow-down" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L0,8 L8,4 z" fill="currentColor" /></marker>
+                                                </defs>
+                                                ${arr1}${arr2}${arr3}
+                                            </svg>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </li>
+                        <li>$g(1) = ${ex3Data.g1_str}$ et $g'(1) = ${ex3Data.gp1_str}$. Équation $y = g'(1)(x - 1) + g(1) \\implies y = ${ex3Data.eq_tangent}$.</li>
+                    </ol>
+                    <h3>Exercice 4</h3>
+                    <ol>
+                        <li>Arbre : $P(E)=${ex4Data.pE/100}$, $P_E(T)=${ex4Data.ptE/100}$, $P(A)=${ex4Data.pA/100}$, $P_A(T)=${ex4Data.ptA/100}$.</li>
+                        <li>$P(E \\cap T) = ${ex4Data.pE/100} \\times ${ex4Data.ptE/100} = ${pInter.toFixed(4)}$.</li>
+                        <li>$P(T) = ${pInter.toFixed(4)} + ${(ex4Data.pA/100) * (ex4Data.ptA/100)} = ${pT.toFixed(4)}$.</li>
+                        <li>$P_T(A) = \\dfrac{P(A \\cap T)}{P(T)} = \\dfrac{${((ex4Data.pA/100) * (ex4Data.ptA/100)).toFixed(4)}}{${pT.toFixed(4)}}$.</li>
+                    </ol>
+                </div>
+            `;
+            document.getElementById('exam-correction-container').innerHTML = correction;
+        }
+
+        // --- Modales et Diaporama QCM ---
+        function showCopyright() { document.getElementById('copyright-modal').style.display = "block"; }
+        function openQcmConfig() { document.getElementById('qcm-config-modal').style.display = "block"; }
+        function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+        function startQcmMode(timed) {
+            closeModal('qcm-config-modal');
+            isQcmTimed = timed;
+            qcmSlideIndex = 0;
+            document.getElementById('qcm-modal').style.display = "block";
+            showQcmSlide();
+        }
+
+        function showQcmSlide() {
+            if(qcmSlideIndex >= qcmData.length) { closeQcmMode(); return; }
+            let q = qcmData[qcmSlideIndex];
+            document.getElementById('qcm-slide-title').innerText = `Question ${qcmSlideIndex + 1} / 10`;
+            
+            let content = `
+                <div style="margin-bottom: 40px;">${q.question}</div>
+                <div class="qcm-slide-choices">
+                    <div>A : ${q.choices.A}</div>
+                    <div>B : ${q.choices.B}</div>
+                    <div>C : ${q.choices.C}</div>
+                    <div>D : ${q.choices.D}</div>
+                    <div>E : ${q.choices.E}</div>
+                </div>
+            `;
+            document.getElementById('qcm-slide-container').innerHTML = content;
+            
+            renderAllCanvas();
+            if (window.MathJax) MathJax.typesetPromise([document.getElementById('qcm-slide-container')]);
+
+            clearInterval(qcmTimer);
+            if (isQcmTimed) {
+                document.getElementById('timer-bar-container').style.display = "block";
+                document.getElementById('qcm-nav-btns').style.display = "none";
+                qcmTimeLeft = 60;
+                updateTimerBar();
+                qcmTimer = setInterval(() => {
+                    qcmTimeLeft--; updateTimerBar();
+                    if(qcmTimeLeft <= 0) { clearInterval(qcmTimer); nextQcmSlide(); }
+                }, 1000);
+            } else {
+                document.getElementById('timer-bar-container').style.display = "none";
+                document.getElementById('qcm-nav-btns').style.display = "flex";
+            }
+        }
+
+        function updateTimerBar() {
+            let width = (qcmTimeLeft / 60) * 100;
+            document.getElementById('timer-bar').style.width = width + "%";
+        }
+        function nextQcmSlide() { qcmSlideIndex++; showQcmSlide(); }
+        function prevQcmSlide() { if(qcmSlideIndex > 0) { qcmSlideIndex--; showQcmSlide(); } }
+        function closeQcmMode() { clearInterval(qcmTimer); document.getElementById('qcm-modal').style.display = "none"; }
+    </script>
+</body>
+</html>
