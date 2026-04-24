@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Programme Mathématiques 1ère STI2D et STL</title>
+    
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                processEscapes: true
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady();
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --accent-color: #2c3e50;
+            --link-color: #2980b9;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            --line-height: 1.6;
+            --letter-spacing: normal;
+            --word-spacing: normal;
+            --font-size: 16px;
+        }
+
+        body.mode-malvoyant {
+            --bg-color: #000000;
+            --text-color: #ffff00;
+            --accent-color: #ffcc00;
+            --link-color: #66ccff;
+            --font-size: 22px;
+        }
+
+        /* Inversion intelligente des graphiques Canvas pour le mode contraste */
+        body.mode-malvoyant canvas {
+            filter: invert(1) hue-rotate(180deg);
+        }
+
+        body.mode-dys {
+            --font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif;
+            --line-height: 2;
+            --letter-spacing: 0.1em;
+            --word-spacing: 0.3em;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: var(--font-family);
+            font-size: var(--font-size);
+            line-height: var(--line-height);
+            letter-spacing: var(--letter-spacing);
+            word-spacing: var(--word-spacing);
+            margin: 0 auto;
+            max-width: 1000px;
+            padding: 20px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .controls {
+            position: sticky;
+            top: 0;
+            background: var(--bg-color);
+            padding: 15px 0;
+            border-bottom: 2px solid var(--accent-color);
+            margin-bottom: 30px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            transition: background-color 0.3s;
+        }
+
+        button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            background-color: var(--link-color);
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            font-family: var(--font-family);
+            transition: opacity 0.2s;
+        }
+
+        button:hover { opacity: 0.8; }
+
+        h1, h2, h3 { color: var(--accent-color); }
+        
+        h1 { text-align: center; margin-bottom: 5px; }
+        .subtitle { text-align: center; font-style: italic; margin-top: 0; margin-bottom: 40px; }
+
+        section {
+            margin-bottom: 50px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            border-left: 5px solid var(--link-color);
+            padding-left: 10px;
+            margin: 0;
+        }
+
+        ul { padding-left: 30px; }
+        li { margin-bottom: 10px; }
+
+        /* Style des Canvas intégrés */
+        canvas {
+            background-color: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            max-width: 100%;
+            align-self: center;
+            margin: 20px 0;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background-color: #ffffff;
+            color: #000000;
+            margin: 10% auto;
+            padding: 30px;
+            width: 80%;
+            max-width: 700px;
+            border-radius: 5px;
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.5;
+            letter-spacing: normal;
+        }
+
+        .close {
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media print {
+            .controls { display: none !important; }
+            body { background: white !important; color: black !important; font-size: 11pt; }
+            canvas { filter: none !important; page-break-inside: avoid; }
+            section { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <button onclick="document.body.classList.toggle('mode-malvoyant')">Visibilité renforcée</button>
+        <button onclick="document.body.classList.toggle('mode-dys')">Adaptation Dys</button>
+        <button onclick="window.print()">Imprimer en PDF</button>
+        <button onclick="document.getElementById('modal-droits').style.display='block'">Droits d'auteur</button>
+    </div>
+
+    <h1>Programme de Mathématiques</h1>
+    <p class="subtitle">Classes de Première - Séries STI2D et STL (Épreuve anticipée)</p>
+
+    <section>
+        <div class="section-header">
+            <h2>1. Vocabulaire ensembliste et logique</h2>
+        </div>
+        <canvas id="cvs-ensembles" width="600" height="200" aria-label="Diagramme de Venn de deux ensembles"></canvas>
+        <ul>
+            <li><strong>Notions d'ensemble :</strong> Élément, sous-ensemble, appartenance ($\in$) et inclusion ($\subset$), réunion ($\cup$), intersection ($\cap$) et complémentaire ($\overline{A}$). Notation des ensembles de nombres et des intervalles.</li>
+            <li><strong>Logique :</strong> Utilisation des connecteurs logiques « et », « ou ». Différence entre identité, équation, variable, inconnue, et paramètre.</li>
+            <li><strong>Raisonnement :</strong> Utilisation d'un contre-exemple. Distinction entre une proposition et sa réciproque. Utilisation des expressions « condition nécessaire », « condition suffisante », « équivalence logique ».</li>
+        </ul>
+    </section>
+
+    <section>
+        <div class="section-header">
+            <h2>2. Algorithmique et programmation (Python)</h2>
+        </div>
+        <canvas id="cvs-algo" width="600" height="200" aria-label="Arbre algorithmique représentant une structure itérative"></canvas>
+        <ul>
+            <li><strong>Variables et structures :</strong> Utilisation d'un générateur de nombres aléatoires entre 0 et 1 pour simuler une loi de Bernoulli. Utilisation de compteurs et du principe d'accumulateur pour une somme ou un produit.</li>
+            <li><strong>Fonctions :</strong> Identifier les entrées/sorties et structurer un programme en ayant recours aux fonctions.</li>
+            <li><strong>Listes :</strong> Générer (en extension, par ajouts successifs, en compréhension), manipuler les éléments et leurs indices, itérer sur les éléments d'une liste.</li>
+            <li><strong>Données :</strong> Traiter un fichier contenant des données réelles pour en extraire de l'information. Réaliser un tableau croisé de données sur deux critères.</li>
+        </ul>
+    </section>
+
+    <section>
+        <div class="section-header">
+            <h2>3. Automatismes</h2>
+        </div>
+        <canvas id="cvs-auto" width="600" height="200" aria-label="Droite mathématique sur repère quadrillé"></canvas>
+        <ul>
+            <li><strong>Proportions et évolutions :</strong> Appliquer et calculer un taux d'évolution, l'exprimer en pourcentage. Indices base 100. Taux d'évolution entre deux valeurs, évolutions successives et taux réciproque.</li>
+            <li><strong>Calcul numérique et algébrique :</strong> Opérations sur les fractions simples, puissances. Écritures (décimale, scientifique). Ordres de grandeur et conversions.</li>
+            <li><strong>Équations et Inéquations :</strong> Résolution au premier degré. Résolution d'équations du type $x^2=a$. Isoler une variable dans une formule.</li>
+            <li><strong>Étude de signe :</strong> Déterminer le signe d'une expression du 1er degré ou d'une expression factorisée du second degré.</li>
+            <li><strong>Représentations :</strong> Coefficient directeur et ordonnée à l'origine d'une droite. Détermination graphique d'images, antécédents, et tableaux de variations ou de signes.</li>
+        </ul>
+    </section>
+
+    <section>
+        <div class="section-header">
+            <h2>4. Analyse</h2>
+        </div>
+        <canvas id="cvs-analyse" width="600" height="200" aria-label="Courbe de fonction avec sa tangente"></canvas>
+        <h3>Suites numériques</h3>
+        <ul>
+            <li>Modélisation d'évolutions discrètes. Utilisation fonctionnelle $u(n)$ et indicielle $u_n$.</li>
+            <li>Étude des suites arithmétiques ($u_{n+1} = u_n + r$) et géométriques ($u_{n+1} = u_n \times q$). Calcul du sens de variation.</li>
+            <li>Représentation par nuage de points.</li>
+        </ul>
+        
+        <h3>Fonctions, Polynômes et Dérivation</h3>
+        <ul>
+            <li><strong>Fonctions polynômes :</strong> Étude de $x \mapsto ax^2+bx+c$. Éléments caractéristiques (sommet, symétrie). Vérification de racines pour des polynômes de degré 2 ou 3. Factorisation simple et étude de signe. Résolution de $x^2=c$ et $x^3=c$ ($c \ge 0$).</li>
+            <li><strong>Dérivation locale :</strong> Taux de variation, sécante, tangente. Nombre dérivé interprété comme coefficient directeur. Équation réduite de la tangente.</li>
+            <li><strong>Dérivation globale :</strong> Fonctions dérivées de $x^2$, $x^3$, d'une somme, et d'un polynôme de degré $\le 3$. Lien fondamental entre le signe de la fonction dérivée et les variations de la fonction.</li>
+        </ul>
+    </section>
+
+    <section>
+        <div class="section-header">
+            <h2>5. Statistiques et probabilités</h2>
+        </div>
+        <canvas id="cvs-probas" width="600" height="200" aria-label="Histogramme de distribution statistique"></canvas>
+        <h3>Statistique descriptive et probabilités conditionnelles</h3>
+        <ul>
+            <li>Dresser et analyser un tableau croisé de deux variables catégorielles. Calculer des fréquences conditionnelles et marginales.</li>
+            <li>Notion de probabilité conditionnelle $P_A(B) = \dfrac{Card(A \cap B)}{Card(A)}$.</li>
+        </ul>
+
+        <h3>Variables aléatoires et Échantillonnage</h3>
+        <ul>
+            <li>Loi de probabilité d'une variable aléatoire discrète. Espérance.</li>
+            <li>Reconnaître et utiliser la loi de Bernoulli de paramètre $p$.</li>
+            <li>Simulation de $N$ échantillons de taille $n$. Notion de dispersion : l'écart-type est de l'ordre de $\dfrac{1}{\sqrt{n}}$.</li>
+        </ul>
+    </section>
+
+    <div id="modal-droits" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="document.getElementById('modal-droits').style.display='none'">&times;</span>
+            <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Avril 2026</p>
+            <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+            <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Programme de mathématiques 1ère STI2D/STL') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            <p><strong>Conditions :</strong></p>
+            <ul>
+                <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+                <li><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur.</li>
+            </ul>
+            <p>Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+        </div>
+    </div>
+
+    <script>
+        window.onclick = function(event) {
+            let modal = document.getElementById('modal-droits');
+            if (event.target == modal) { modal.style.display = "none"; }
+        }
+
+        // Fonctions utilitaires
+        function drawGrid(ctx, w, h, step) {
+            ctx.beginPath();
+            ctx.strokeStyle = '#f0f0f0';
+            ctx.lineWidth = 1;
+            for(let x=0; x<=w; x+=step) { ctx.moveTo(x,0); ctx.lineTo(x,h); }
+            for(let y=0; y<=h; y+=step) { ctx.moveTo(0,y); ctx.lineTo(w,y); }
+            ctx.stroke();
+        }
+
+        // 1. Ensembles (Venn précis)
+        function drawEnsembles() {
+            const ctx = document.getElementById('cvs-ensembles').getContext('2d');
+            const w = 600, h = 200;
+            drawGrid(ctx, w, h, 20);
+            
+            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = '#2c3e50';
+            
+            // Cercle A
+            ctx.beginPath(); ctx.arc(260, 100, 60, 0, Math.PI*2); ctx.stroke();
+            // Cercle B
+            ctx.beginPath(); ctx.arc(340, 100, 60, 0, Math.PI*2); ctx.stroke();
+
+            // Hachures fines pour l'intersection
+            ctx.save();
+            ctx.beginPath(); ctx.arc(260, 100, 60, 0, Math.PI*2); ctx.clip();
+            ctx.beginPath(); ctx.arc(340, 100, 60, 0, Math.PI*2); ctx.clip();
+            ctx.beginPath();
+            ctx.strokeStyle = '#2980b9';
+            ctx.lineWidth = 1;
+            for(let i=0; i<w; i+=5) { ctx.moveTo(i, 0); ctx.lineTo(i-h, h); }
+            ctx.stroke();
+            ctx.restore();
+
+            ctx.fillStyle = '#2c3e50';
+            ctx.font = 'italic 16px Arial';
+            ctx.fillText('A', 220, 105);
+            ctx.fillText('B', 370, 105);
+            ctx.fillText('A ∩ B', 280, 160);
+        }
+
+        // 2. Algorithmique (Arbre itératif fractal fin)
+        function drawAlgo() {
+            const ctx = document.getElementById('cvs-algo').getContext('2d');
+            drawGrid(ctx, 600, 200, 20);
+            ctx.strokeStyle = '#2980b9';
+            ctx.lineWidth = 1;
+
+            function drawBranch(x, y, len, angle, depth) {
+                if (depth === 0) return;
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                let endX = x + len * Math.cos(angle);
+                let endY = y + len * Math.sin(angle);
+                ctx.lineTo(endX, endY);
+                ctx.stroke();
+                
+                // Nœud
+                ctx.beginPath(); ctx.arc(endX, endY, 2, 0, Math.PI*2); 
+                ctx.fillStyle = '#2c3e50'; ctx.fill();
+
+                drawBranch(endX, endY, len * 0.7, angle - Math.PI/6, depth - 1);
+                drawBranch(endX, endY, len * 0.7, angle + Math.PI/6, depth - 1);
+            }
+            drawBranch(300, 180, 50, -Math.PI/2, 6);
+        }
+
+        // 3. Automatismes (Droite y=ax+b et taux de variation)
+        function drawAuto() {
+            const ctx = document.getElementById('cvs-auto').getContext('2d');
+            const w = 600, h = 200;
+            drawGrid(ctx, w, h, 20);
+            
+            // Axes
+            ctx.beginPath();
+            ctx.moveTo(0, 150); ctx.lineTo(w, 150); // X
+            ctx.moveTo(100, 0); ctx.lineTo(100, h); // Y
+            ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.stroke();
+
+            // Droite
+            ctx.beginPath();
+            ctx.moveTo(50, 175); // (x0, y0)
+            ctx.lineTo(450, -25); // (x1, y1)
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Triangle de variation
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.moveTo(200, 100); 
+            ctx.lineTo(300, 100); 
+            ctx.lineTo(300, 50);
+            ctx.strokeStyle = '#2980b9';
+            ctx.stroke();
+            ctx.setLineDash([]);
+            
+            ctx.fillStyle = '#2980b9';
+            ctx.font = '12px Arial';
+            ctx.fillText('Δx', 245, 115);
+            ctx.fillText('Δy', 310, 80);
+        }
+
+        // 4. Analyse (Courbe cubique + Tangente)
+        function drawAnalyse() {
+            const ctx = document.getElementById('cvs-analyse').getContext('2d');
+            const w = 600, h = 200;
+            drawGrid(ctx, w, h, 20);
+
+            // Axes
+            ctx.beginPath(); ctx.strokeStyle = '#ccc'; ctx.lineWidth = 1;
+            ctx.moveTo(0, 100); ctx.lineTo(w, 100);
+            ctx.moveTo(300, 0); ctx.lineTo(300, h);
+            ctx.stroke();
+
+            // Courbe
+            ctx.beginPath();
+            for(let x=0; x<=w; x++) {
+                let rx = (x - 300) / 40;
+                let ry = 0.2 * Math.pow(rx, 3) - 1.5 * rx;
+                let py = 100 - ry * 30;
+                if(x===0) ctx.moveTo(x, py); else ctx.lineTo(x, py);
+            }
+            ctx.strokeStyle = '#2c3e50'; ctx.lineWidth = 1.5; ctx.stroke();
+
+            // Tangente au point d'inflexion (environ rx=1)
+            let tx = 340; // rx = 1
+            let ty = 100 - (0.2 - 1.5) * 30; // ry = -1.3 -> py = 139
+            // pente f'(1) = 0.6 * 1 - 1.5 = -0.9 -> pente ecran = -(-0.9 * 30 / 40) = + 0.675
+            
+            ctx.beginPath();
+            ctx.moveTo(tx - 60, ty - 60 * 0.675);
+            ctx.lineTo(tx + 60, ty + 60 * 0.675);
+            ctx.strokeStyle = '#2980b9';
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+
+            // Point de tangence
+            ctx.beginPath(); ctx.arc(tx, ty, 3, 0, Math.PI*2);
+            ctx.fillStyle = '#2980b9'; ctx.fill();
+        }
+
+        // 5. Statistiques (Distribution en bâtons fins)
+        function drawProbas() {
+            const ctx = document.getElementById('cvs-probas').getContext('2d');
+            const w = 600, h = 200;
+            drawGrid(ctx, w, h, 20);
+
+            // Axe de base
+            ctx.beginPath(); ctx.moveTo(100, 160); ctx.lineTo(500, 160);
+            ctx.strokeStyle = '#999'; ctx.lineWidth = 1; ctx.stroke();
+
+            // Bâtons (loi binomiale approximée)
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = '#2c3e50';
+            for(let i=0; i<=20; i++) {
+                let x = 120 + i * 18;
+                // Formule de cloche (gaussienne centrée sur 10)
+                let height = 120 * Math.exp(-Math.pow(i - 10, 2) / 10);
+                
+                ctx.beginPath();
+                ctx.moveTo(x, 160);
+                ctx.lineTo(x, 160 - height);
+                ctx.stroke();
+                
+                // Petit point en haut du bâton
+                ctx.beginPath(); ctx.arc(x, 160 - height, 2, 0, Math.PI*2);
+                ctx.fillStyle = '#2980b9'; ctx.fill();
+            }
+
+            // Courbe enveloppe (trait très fin)
+            ctx.beginPath();
+            ctx.setLineDash([2, 2]);
+            ctx.strokeStyle = '#2980b9';
+            ctx.lineWidth = 1;
+            for(let i=0; i<=20; i++) {
+                let x = 120 + i * 18;
+                let height = 120 * Math.exp(-Math.pow(i - 10, 2) / 10);
+                if(i===0) ctx.moveTo(x, 160 - height); else ctx.lineTo(x, 160 - height);
+            }
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Dessin global au chargement
+        window.onload = function() {
+            drawEnsembles();
+            drawAlgo();
+            drawAuto();
+            drawAnalyse();
+            drawProbas();
+        };
+    </script>
+</body>
+</html>
