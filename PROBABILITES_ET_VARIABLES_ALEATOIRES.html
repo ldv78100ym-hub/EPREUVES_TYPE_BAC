@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercices - Probabilités conditionnelles & Loi de probabilité</title>
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f0f4f8;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
+        }
+        .main-container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 30px;
+            transition: all 0.3s;
+        }
+        h1 {
+            color: #1e3c72;
+            text-align: center;
+            margin-top: 0;
+        }
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 25px;
+        }
+        button {
+            background: #1e3c72;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        button:hover {
+            background: #2a5298;
+            transform: translateY(-1px);
+        }
+        button.secondary {
+            background: #3b5998;
+        }
+        button.download {
+            background: #0f7b4e;
+        }
+        .exercise-box {
+            background: #f9fbfd;
+            border: 1px solid #dce6f0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        .context {
+            font-size: 1.05rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .question {
+            margin: 18px 0;
+            padding-left: 10px;
+            border-left: 4px solid #1e3c72;
+        }
+        .question label {
+            font-weight: 500;
+        }
+        input[type="number"] {
+            width: 100px;
+            padding: 5px;
+            margin-left: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        input[type="text"],
+        textarea {
+            padding: 5px;
+            margin-left: 8px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+        select {
+            padding: 5px;
+            margin-left: 8px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+        }
+        .feedback {
+            display: inline-block;
+            margin-left: 10px;
+            font-weight: bold;
+        }
+        .correct {
+            color: #1e7e34;
+        }
+        .incorrect {
+            color: #c00;
+        }
+        .tree-container {
+            position: relative;
+            width: 600px;
+            height: 400px;
+            margin: 20px auto;
+            border: 1px dashed #aaa;
+            background: #fff;
+        }
+        .tree-container canvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            z-index: 1;
+        }
+        /* Nouvelles classes pour positionner les labels de l'arbre via HTML/MathJax */
+        .tree-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            font-size: 1.1rem;
+            z-index: 2;
+        }
+        .edge-label {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            color: #b00;
+            font-weight: bold;
+            font-style: italic;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 0 4px;
+            border-radius: 4px;
+            z-index: 2;
+        }
+        .tree-overlay-input {
+            position: absolute;
+            width: 55px;
+            font-size: 0.9rem;
+            text-align: center;
+            border: 1px solid #888;
+            border-radius: 4px;
+            background: #ffffe0;
+            padding: 2px;
+            z-index: 5;
+        }
+        table {
+            border-collapse: collapse;
+            margin: 15px auto;
+            background: white;
+        }
+        table td,
+        table th {
+            border: 1px solid #999;
+            padding: 6px 12px;
+            text-align: center;
+            min-width: 70px;
+        }
+        table input {
+            width: 85px;
+            text-align: center;
+        }
+        .submit-btn {
+            display: block;
+            margin: 25px auto 10px;
+            background: #d35400;
+        }
+        .interpretation {
+            background: #eaf2f8;
+            border-left: 4px solid #1e3c72;
+            padding: 10px 15px;
+            margin: 20px 0;
+            font-style: italic;
+        }
+        .independence-justify {
+            margin: 5px 0 0 30px;
+            font-size: 0.95rem;
+        }
+        .translation-note {
+            font-size: 0.9rem;
+            color: #555;
+            margin-top: 4px;
+            background: #fef9e7;
+            padding: 6px 10px;
+            border-radius: 5px;
+        }
+
+        /* --- ACCESSIBILITÉ --- */
+        body.dys-mode {
+            font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+            letter-spacing: 0.1em;
+            word-spacing: 0.2em;
+            line-height: 1.6;
+        }
+        body.dys-mode .main-container { max-width: 1200px; }
+        
+        body.malvoyant-mode {
+            background-color: #000 !important;
+            color: #ff0 !important;
+        }
+        body.malvoyant-mode .main-container,
+        body.malvoyant-mode .exercise-box,
+        body.malvoyant-mode table,
+        body.malvoyant-mode .tree-container,
+        body.malvoyant-mode .interpretation,
+        body.malvoyant-mode .translation-note {
+            background-color: #111 !important;
+            color: #ff0 !important;
+            border-color: #ff0 !important;
+        }
+        body.malvoyant-mode button { background: #ff0; color: #000; font-weight: bold; }
+        body.malvoyant-mode button.secondary { background: #dd0; }
+        body.malvoyant-mode input, 
+        body.malvoyant-mode select, 
+        body.malvoyant-mode textarea {
+            background: #222; color: #ff0; border: 1px solid #ff0;
+        }
+        body.malvoyant-mode .edge-label {
+            background: rgba(17, 17, 17, 0.9);
+            color: #ff0;
+        }
+        body.malvoyant-mode h1,
+        body.malvoyant-mode .question {
+            color: #ff0; border-color: #ff0;
+        }
+
+        /* --- MODAL DROITS D'AUTEUR --- */
+        .modal {
+            display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.7); justify-content: center; align-items: center;
+        }
+        .modal-content {
+            background-color: #fff; padding: 30px; border-radius: 10px; max-width: 600px; text-align: justify;
+        }
+        body.malvoyant-mode .modal-content { background-color: #111; border: 2px solid #ff0; }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <h1>🎲 Probabilités conditionnelles & Loi de probabilité</h1>
+        <div class="controls">
+            <button onclick="document.body.classList.toggle('dys-mode')" class="secondary">Mode Dys</button>
+            <button onclick="document.body.classList.toggle('malvoyant-mode')" class="secondary">Mode Malvoyant</button>
+            <button onclick="document.getElementById('droitsModal').style.display='flex'" class="secondary" style="background:#555;">Droits d'auteur</button>
+            
+            <button onclick="generateExercise('all')">Nouvel exercice (Tous)</button>
+            <button onclick="generateExercise('industry')" class="secondary">🏭 Industrie</button>
+            <button onclick="generateExercise('biology')" class="secondary">🧬 Biologie</button>
+            <button onclick="downloadJSON()" class="download">📄 Exporter le rapport JSON</button>
+        </div>
+        <div id="exercise-container"></div>
+    </div>
+
+    <div id="droitsModal" class="modal">
+        <div class="modal-content">
+            <h2 style="text-align: center; color: inherit;">⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+            <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Avril 2026</p>
+            <p><strong>Licence d'Utilisation Non Commerciale</strong><br>
+            Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application ('Probabilités et Variables Aléatoires') sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+            <p><strong>Conditions :</strong></p>
+            <ul>
+                <li><strong>Utilisation Privée et Éducative (Autorisée) :</strong> Vous êtes autorisé.e à utiliser, copier, modifier et distribuer ce code et son contenu uniquement à des fins personnelles, éducatives et non lucratives.</li>
+                <li><strong>Utilisation Commerciale (Interdite) :</strong> Toute utilisation, distribution, intégration ou reproduction du code ou du contenu (total ou partiel) à des fins commerciales, lucratives ou professionnelles est strictement interdite sans un accord écrit préalable et explicite de l'auteur.</li>
+            </ul>
+            <p><strong>Attribution :</strong> Toute reproduction ou modification doit conserver la mention de l'auteur originale (Yann Merdy) et la présente notice de droits d'auteur. Pour toute demande d'utilisation commerciale ou de licence spécifique, veuillez contacter l'auteur à l'adresse indiquée ci-dessus.</p>
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="document.getElementById('droitsModal').style.display='none'">Fermer</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ---------- Contextes ----------
+        const industrialContexts = [
+            { name: "Usinage mécanique", text: (pA, pCA, pCB) => `Une usine fabrique des pièces mécaniques avec deux machines \\(M_1\\) et \\(M_2\\). La machine \\(M_1\\) assure ${(pA * 100).toFixed(1)}\\% de la production, le reste provenant de \\(M_2\\). ${(pCA * 100).toFixed(1)}\\% des pièces issues de \\(M_1\\) sont défectueuses, contre ${(pCB * 100).toFixed(1)}\\% pour \\(M_2\\). On prélève une pièce au hasard. On note \\(A\\) l'événement « la pièce provient de \\(M_1\\) », \\(B\\) « elle provient de \\(M_2\\) » et \\(C\\) « la pièce est défectueuse ».`, itemPlural: "pièces", itemSing: "pièce", eventC: "défectueuse", phraseA: "la pièce provient de M1", phraseB: "la pièce provient de M2", phraseC: "la pièce est défectueuse", phraseCbar: "la pièce n'est pas défectueuse" },
+            { name: "Chaîne électronique", text: (pA, pCA, pCB) => `Deux lignes d'assemblage \\(L_1\\) et \\(L_2\\) produisent des cartes électroniques. \\(L_1\\) produit ${(pA * 100).toFixed(1)}\\% des cartes, \\(L_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des cartes de \\(L_1\\) présentent un défaut, contre ${(pCB * 100).toFixed(1)}\\% pour \\(L_2\\). On teste une carte au hasard. \\(A\\) : « carte issue de \\(L_1\\) », \\(B\\) : « carte issue de \\(L_2\\) », \\(C\\) : « carte défectueuse ».`, itemPlural: "cartes", itemSing: "carte", eventC: "défectueuse", phraseA: "la carte provient de L1", phraseB: "la carte provient de L2", phraseC: "la carte est défectueuse", phraseCbar: "la carte n'est pas défectueuse" },
+            { name: "Textile", text: (pA, pCA, pCB) => `Un atelier reçoit du tissu de deux fournisseurs \\(F_1\\) et \\(F_2\\). \\(F_1\\) livre ${(pA * 100).toFixed(1)}\\% des rouleaux, \\(F_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des rouleaux de \\(F_1\\) ont un défaut de tissage, contre ${(pCB * 100).toFixed(1)}\\% pour \\(F_2\\). On examine un rouleau. \\(A\\) : « provient de \\(F_1\\) », \\(B\\) : « provient de \\(F_2\\) », \\(C\\) : « défaut de tissage ».`, itemPlural: "rouleaux", itemSing: "rouleau", eventC: "défectueux", phraseA: "le rouleau provient de F1", phraseB: "le rouleau provient de F2", phraseC: "le rouleau a un défaut", phraseCbar: "le rouleau n'a pas de défaut" },
+            { name: "Embouteillage", text: (pA, pCA, pCB) => `Deux remplisseuses \\(R_1\\) et \\(R_2\\) assurent l'embouteillage. \\(R_1\\) remplit ${(pA * 100).toFixed(1)}\\% des bouteilles, \\(R_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des bouteilles de \\(R_1\\) sont mal remplies, contre ${(pCB * 100).toFixed(1)}\\% pour \\(R_2\\). On prélève une bouteille. \\(A\\) : « remplie par \\(R_1\\) », \\(B\\) : « remplie par \\(R_2\\) », \\(C\\) : « bouteille mal remplie ».`, itemPlural: "bouteilles", itemSing: "bouteille", eventC: "mal remplie", phraseA: "la bouteille est remplie par R1", phraseB: "la bouteille est remplie par R2", phraseC: "la bouteille est mal remplie", phraseCbar: "la bouteille est bien remplie" },
+            { name: "Chimie fine", text: (pA, pCA, pCB) => `Un produit est synthétisé dans deux réacteurs \\(X\\) et \\(Y\\). Le réacteur \\(X\\) fournit ${(pA * 100).toFixed(1)}\\% de la production, \\(Y\\) le reste. ${(pCA * 100).toFixed(1)}\\% des lots issus de \\(X\\) ont une pureté insuffisante, contre ${(pCB * 100).toFixed(1)}\\% pour \\(Y\\). On contrôle un lot. \\(A\\) : « issu de \\(X\\) », \\(B\\) : « issu de \\(Y\\) », \\(C\\) : « pureté insuffisante ».`, itemPlural: "lots", itemSing: "lot", eventC: "non conforme", phraseA: "le lot provient de X", phraseB: "le lot provient de Y", phraseC: "le lot a une pureté insuffisante", phraseCbar: "le lot a une pureté suffisante" },
+            { name: "Automobile", text: (pA, pCA, pCB) => `Des essuie-glaces proviennent de deux usines \\(U_1\\) et \\(U_2\\). \\(U_1\\) fabrique ${(pA * 100).toFixed(1)}\\% du stock, \\(U_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des essuie-glaces de \\(U_1\\) sont défectueux, contre ${(pCB * 100).toFixed(1)}\\% pour \\(U_2\\). On teste un essuie-glace. \\(A\\) : « provient de \\(U_1\\) », \\(B\\) : « provient de \\(U_2\\) », \\(C\\) : « défectueux ».`, itemPlural: "essuie-glaces", itemSing: "essuie-glace", eventC: "défectueux", phraseA: "l'essuie-glace provient de U1", phraseB: "l'essuie-glace provient de U2", phraseC: "l'essuie-glace est défectueux", phraseCbar: "l'essuie-glace n'est pas défectueux" },
+            { name: "Aéronautique", text: (pA, pCA, pCB) => `Des rivets sont en titane (\\(T\\)) ou en aluminium (\\(Al\\)). ${(pA * 100).toFixed(1)}\\% des rivets sont en titane, le reste en aluminium. ${(pCA * 100).toFixed(1)}\\% des rivets en titane présentent une fissure, contre ${(pCB * 100).toFixed(1)}\\% pour l'aluminium. On examine un rivet. \\(A\\) : « titane », \\(B\\) : « aluminium », \\(C\\) : « fissuré ».`, itemPlural: "rivets", itemSing: "rivet", eventC: "fissuré", phraseA: "le rivet est en titane", phraseB: "le rivet est en aluminium", phraseC: "le rivet est fissuré", phraseCbar: "le rivet n'est pas fissuré" },
+            { name: "Pharmaceutique", text: (pA, pCA, pCB) => `Deux unités \\(U_1\\) et \\(U_2\\) produisent des comprimés. \\(U_1\\) produit ${(pA * 100).toFixed(1)}\\% des comprimés, \\(U_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des comprimés de \\(U_1\\) sont non conformes, contre ${(pCB * 100).toFixed(1)}\\% pour \\(U_2\\). On prélève un comprimé. \\(A\\) : « provient de \\(U_1\\) », \\(B\\) : « provient de \\(U_2\\) », \\(C\\) : « non conforme ».`, itemPlural: "comprimés", itemSing: "comprimé", eventC: "non conforme", phraseA: "le comprimé provient de U1", phraseB: "le comprimé provient de U2", phraseC: "le comprimé est non conforme", phraseCbar: "le comprimé est conforme" },
+            { name: "Panneaux solaires", text: (pA, pCA, pCB) => `Deux usines \\(A\\) et \\(B\\) fabriquent des panneaux solaires. L'usine \\(A\\) produit ${(pA * 100).toFixed(1)}\\% des panneaux, \\(B\\) le reste. ${(pCA * 100).toFixed(1)}\\% des panneaux de \\(A\\) ont un rendement inférieur au seuil, contre ${(pCB * 100).toFixed(1)}\\% pour \\(B\\). On teste un panneau. \\(A\\) : « provient de \\(A\\) », \\(B\\) : « provient de \\(B\\) », \\(C\\) : « rendement insuffisant ».`, itemPlural: "panneaux", itemSing: "panneau", eventC: "défaillant", phraseA: "le panneau provient de l'usine A", phraseB: "le panneau provient de l'usine B", phraseC: "le panneau a un rendement insuffisant", phraseCbar: "le panneau a un rendement suffisant" },
+            { name: "Scierie", text: (pA, pCA, pCB) => `Une scierie traite du sapin (\\(S\\)) et du chêne (\\(Ch\\)). ${(pA * 100).toFixed(1)}\\% des planches sont en sapin, le reste en chêne. ${(pCA * 100).toFixed(1)}\\% des planches de sapin présentent un nœud excessif, contre ${(pCB * 100).toFixed(1)}\\% pour le chêne. On examine une planche. \\(A\\) : « sapin », \\(B\\) : « chêne », \\(C\\) : « nœud excessif ».`, itemPlural: "planches", itemSing: "planche", eventC: "avec nœud excessif", phraseA: "la planche est en sapin", phraseB: "la planche est en chêne", phraseC: "la planche a un nœud excessif", phraseCbar: "la planche n'a pas de nœud excessif" }
+        ];
+
+        const biologyContexts = [
+            { name: "Test de dépistage", text: (pA, pCA, pCB) => `Une population est divisée en deux groupes à risque : groupe \\(A\\) (${(pA * 100).toFixed(1)}\\% de la population) et groupe \\(B\\) (le reste). Dans le groupe \\(A\\), ${(pCA * 100).toFixed(1)}\\% des individus sont atteints d'une maladie \\(M\\) ; dans le groupe \\(B\\), ce taux est de ${(pCB * 100).toFixed(1)}\\%. On choisit une personne au hasard. \\(A\\) : « appartient au groupe \\(A\\) », \\(B\\) : « groupe \\(B\\) », \\(C\\) : « atteint de la maladie \\(M\\) ».`, itemPlural: "personnes", itemSing: "personne", eventC: "malade", phraseA: "la personne appartient au groupe A", phraseB: "la personne appartient au groupe B", phraseC: "la personne est malade", phraseCbar: "la personne n'est pas malade" },
+            { name: "Croisement de blé", text: (pA, pCA, pCB) => `Deux variétés de blé \\(V_1\\) et \\(V_2\\) sont cultivées. \\(V_1\\) représente ${(pA * 100).toFixed(1)}\\% des semis, \\(V_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des plants \\(V_1\\) résistent à la rouille, contre ${(pCB * 100).toFixed(1)}\\% pour \\(V_2\\). On observe un plant. \\(A\\) : « variété \\(V_1\\) », \\(B\\) : « variété \\(V_2\\) », \\(C\\) : « résistant à la rouille ».`, itemPlural: "plants", itemSing: "plant", eventC: "résistant", phraseA: "le plant est de variété V1", phraseB: "le plant est de variété V2", phraseC: "le plant résiste à la rouille", phraseCbar: "le plant ne résiste pas à la rouille" },
+            { name: "Pollution d'un lac", text: (pA, pCA, pCB) => `Un lac reçoit l'eau de deux rivières \\(R_1\\) et \\(R_2\\). \\(R_1\\) contribue à ${(pA * 100).toFixed(1)}\\% du débit, \\(R_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des échantillons prélevés dans \\(R_1\\) contiennent un polluant \\(P\\), contre ${(pCB * 100).toFixed(1)}\\% pour \\(R_2\\). On prélève un échantillon au hasard. \\(A\\) : « provient de \\(R_1\\) », \\(B\\) : « provient de \\(R_2\\) », \\(C\\) : « présence du polluant \\(P\\) ».`, itemPlural: "échantillons", itemSing: "échantillon", eventC: "pollué", phraseA: "l'échantillon provient de R1", phraseB: "l'échantillon provient de R2", phraseC: "l'échantillon contient le polluant", phraseCbar: "l'échantillon ne contient pas le polluant" },
+            { name: "Culture bactérienne", text: (pA, pCA, pCB) => `Deux milieux de culture \\(M_1\\) et \\(M_2\\) sont utilisés. \\(M_1\\) est employé pour ${(pA * 100).toFixed(1)}\\% des boîtes, \\(M_2\\) pour le reste. ${(pCA * 100).toFixed(1)}\\% des boîtes \\(M_1\\) sont contaminées, contre ${(pCB * 100).toFixed(1)}\\% pour \\(M_2\\). On examine une boîte. \\(A\\) : « milieu \\(M_1\\) », \\(B\\) : « milieu \\(M_2\\) », \\(C\\) : « contaminée ».`, itemPlural: "boîtes", itemSing: "boîte", eventC: "contaminée", phraseA: "la boîte utilise le milieu M1", phraseB: "la boîte utilise le milieu M2", phraseC: "la boîte est contaminée", phraseCbar: "la boîte n'est pas contaminée" },
+            { name: "Épidémiologie", text: (pA, pCA, pCB) => `Dans une région, ${(pA * 100).toFixed(1)}\\% de la population vit en zone urbaine (\\(U\\)), le reste en zone rurale (\\(R\\)). ${(pCA * 100).toFixed(1)}\\% des urbains sont infectés par un virus, contre ${(pCB * 100).toFixed(1)}\\% des ruraux. On interroge un habitant. \\(A\\) : « urbain », \\(B\\) : « rural », \\(C\\) : « infecté ».`, itemPlural: "habitants", itemSing: "habitant", eventC: "infecté", phraseA: "l'habitant vit en zone urbaine", phraseB: "l'habitant vit en zone rurale", phraseC: "l'habitant est infecté", phraseCbar: "l'habitant n'est pas infecté" },
+            { name: "Blanchiment des coraux", text: (pA, pCA, pCB) => `Un récif comporte des coraux peu profonds (\\(P\\)) et profonds (\\(F\\)). ${(pA * 100).toFixed(1)}\\% des colonies sont peu profondes, le reste profondes. ${(pCA * 100).toFixed(1)}\\% des colonies peu profondes ont blanchi, contre ${(pCB * 100).toFixed(1)}\\% pour les profondes. On observe une colonie. \\(A\\) : « peu profonde », \\(B\\) : « profonde », \\(C\\) : « blanchie ».`, itemPlural: "colonies", itemSing: "colonie", eventC: "blanchie", phraseA: "la colonie est peu profonde", phraseB: "la colonie est profonde", phraseC: "la colonie a blanchi", phraseCbar: "la colonie n'a pas blanchi" },
+            { name: "Test pharmacologique", text: (pA, pCA, pCB) => `Deux lignées de souris \\(L_1\\) et \\(L_2\\) sont utilisées pour tester un médicament. \\(L_1\\) représente ${(pA * 100).toFixed(1)}\\% des sujets, \\(L_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des souris \\(L_1\\) répondent positivement, contre ${(pCB * 100).toFixed(1)}\\% pour \\(L_2\\). On choisit une souris. \\(A\\) : « lignée \\(L_1\\) », \\(B\\) : « lignée \\(L_2\\) », \\(C\\) : « réponse positive ».`, itemPlural: "souris", itemSing: "souris", eventC: "répond positivement", phraseA: "la souris est de lignée L1", phraseB: "la souris est de lignée L2", phraseC: "la souris répond positivement", phraseCbar: "la souris ne répond pas positivement" },
+            { name: "Germination", text: (pA, pCA, pCB) => `Deux lots de graines \\(G_1\\) et \\(G_2\\) sont testés. \\(G_1\\) constitue ${(pA * 100).toFixed(1)}\\% du stock, \\(G_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des graines de \\(G_1\\) germent, contre ${(pCB * 100).toFixed(1)}\\% pour \\(G_2\\). On sème une graine. \\(A\\) : « provient de \\(G_1\\) », \\(B\\) : « provient de \\(G_2\\) », \\(C\\) : « germe ».`, itemPlural: "graines", itemSing: "graine", eventC: "germe", phraseA: "la graine provient de G1", phraseB: "la graine provient de G2", phraseC: "la graine germe", phraseCbar: "la graine ne germe pas" },
+            { name: "Groupes sanguins", text: (pA, pCA, pCB) => `Parmi les donneurs de sang, ${(pA * 100).toFixed(1)}\\% sont du groupe \\(O\\) (\\(A\\)), le reste d'un autre groupe (\\(B\\)). ${(pCA * 100).toFixed(1)}\\% des donneurs \\(O\\) sont rhésus positif, contre ${(pCB * 100).toFixed(1)}\\% pour les non-\\(O\\). On tire au sort un donneur. \\(A\\) : « groupe \\(O\\) », \\(B\\) : « non \\(O\\) », \\(C\\) : « rhésus positif ».`, itemPlural: "donneurs", itemSing: "donneur", eventC: "rhésus positif", phraseA: "le donneur est du groupe O", phraseB: "le donneur n'est pas du groupe O", phraseC: "le donneur est rhésus positif", phraseCbar: "le donneur est rhésus négatif" },
+            { name: "Mutation cellulaire", text: (pA, pCA, pCB) => `Deux lignées cellulaires \\(C_1\\) et \\(C_2\\) sont cultivées. \\(C_1\\) représente ${(pA * 100).toFixed(1)}\\% des cellules, \\(C_2\\) le reste. ${(pCA * 100).toFixed(1)}\\% des cellules \\(C_1\\) présentent une mutation, contre ${(pCB * 100).toFixed(1)}\\% pour \\(C_2\\). On observe une cellule. \\(A\\) : « lignée \\(C_1\\) », \\(B\\) : « lignée \\(C_2\\) », \\(C\\) : « mutée ».`, itemPlural: "cellules", itemSing: "cellule", eventC: "mutée", phraseA: "la cellule est de lignée C1", phraseB: "la cellule est de lignée C2", phraseC: "la cellule est mutée", phraseCbar: "la cellule n'est pas mutée" }
+        ];
+
+        let resultsLog = [];
+        let currentExercise = null;
+        let submitted = false;
+
+        function rand(min, max) { return Math.random() * (max - min) + min; }
+        function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+        function round(num, decimals = 3) { return Math.round(num * Math.pow(10, decimals)) / Math.pow(10, decimals); }
+
+        function drawTree(containerId, pA, pCA, pCB, missing) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            const canvas = document.createElement('canvas');
+            canvas.width = 600;
+            canvas.height = 400;
+            container.appendChild(canvas);
+            const ctx = canvas.getContext('2d');
+
+            const rootX = 60, rootY = 200;
+            const nodeAX = 240, nodeAY = 110;
+            const nodeBX = 240, nodeBY = 290;
+            const leafACx = 440, leafACy = 65;
+            const leafACbarX = 440, leafACbarY = 155;
+            const leafBCx = 440, leafBCy = 245;
+            const leafBCbarX = 440, leafBCbarY = 335;
+
+            function drawBranch(x1, y1, x2, y2, dashed = false) {
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.strokeStyle = document.body.classList.contains('malvoyant-mode') ? '#ff0' : '#333';
+                ctx.lineWidth = 1.8;
+                if (dashed) {
+                    ctx.setLineDash([6, 4]);
+                } else {
+                    ctx.setLineDash([]);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]); 
+            }
+
+            const branchB = missing.includes('B');
+            const branchCbarA = missing.includes('CbarA');
+            const branchCbarB = missing.includes('CbarB');
+
+            drawBranch(rootX, rootY, nodeAX, nodeAY, false);
+            drawBranch(rootX, rootY, nodeBX, nodeBY, branchB);
+            drawBranch(nodeAX, nodeAY, leafACx, leafACy, false);
+            drawBranch(nodeAX, nodeAY, leafACbarX, leafACbarY, branchCbarA);
+            drawBranch(nodeBX, nodeBY, leafBCx, leafBCy, false);
+            drawBranch(nodeBX, nodeBY, leafBCbarX, leafBCbarY, branchCbarB);
+
+            // Nœuds (cercles)
+            function dot(x, y) {
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                ctx.fillStyle = document.body.classList.contains('malvoyant-mode') ? '#ff0' : '#1e3c72';
+                ctx.fill();
+            }
+            dot(rootX, rootY);
+            dot(nodeAX, nodeAY);
+            dot(nodeBX, nodeBY);
+
+            // Fonction pour injecter les labels textuels (A, B, C...) en HTML/MathJax
+            function addTreeLabel(x, y, latex) {
+                const div = document.createElement('div');
+                div.className = 'tree-label';
+                div.style.left = x + 'px';
+                div.style.top = y + 'px';
+                div.innerHTML = '\\(' + latex + '\\)';
+                container.appendChild(div);
+            }
+
+            // Placement des noeuds et feuilles
+            addTreeLabel(nodeAX, nodeAY - 20, 'A');
+            addTreeLabel(nodeBX, nodeBY - 20, 'B');
+            addTreeLabel(leafACx + 25, leafACy, 'C');
+            addTreeLabel(leafACbarX + 25, leafACbarY, '\\overline{C}');
+            addTreeLabel(leafBCx + 25, leafBCy, 'C');
+            addTreeLabel(leafBCbarX + 25, leafBCbarY, '\\overline{C}');
+
+            // Affichage des probabilités sur les branches en HTML
+            function edgeText(xMid, yMid, val, hidden) {
+                if (hidden) return;
+                const div = document.createElement('div');
+                div.className = 'edge-label';
+                div.style.left = xMid + 'px';
+                div.style.top = (yMid - 14) + 'px';
+                div.textContent = val.toFixed(3);
+                container.appendChild(div);
+            }
+
+            const pB = round(1 - pA, 3);
+            const pCbarA = round(1 - pCA, 3);
+            const pCbarB = round(1 - pCB, 3);
+
+            edgeText((rootX + nodeAX) / 2, (rootY + nodeAY) / 2, pA, false);
+            edgeText((rootX + nodeBX) / 2, (rootY + nodeBY) / 2, pB, branchB);
+            edgeText((nodeAX + leafACx) / 2, (nodeAY + leafACy) / 2, pCA, false);
+            edgeText((nodeAX + leafACbarX) / 2, (nodeAY + leafACbarY) / 2, pCbarA, branchCbarA);
+            edgeText((nodeBX + leafBCx) / 2, (nodeBY + leafBCy) / 2, pCB, false);
+            edgeText((nodeBX + leafBCbarX) / 2, (nodeBY + leafBCbarY) / 2, pCbarB, branchCbarB);
+
+            // Champs de saisie pour les branches manquantes
+            const inputsData = [
+                { id: 'tree-B', xMid: (rootX + nodeBX) / 2, yMid: (rootY + nodeBY) / 2, show: branchB },
+                { id: 'tree-CbarA', xMid: (nodeAX + leafACbarX) / 2, yMid: (nodeAY + leafACbarY) / 2, show: branchCbarA },
+                { id: 'tree-CbarB', xMid: (nodeBX + leafBCbarX) / 2, yMid: (nodeBY + leafBCbarY) / 2, show: branchCbarB }
+            ];
+
+            inputsData.forEach(inp => {
+                if (inp.show) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.step = 'any';
+                    input.id = inp.id;
+                    input.className = 'tree-overlay-input';
+                    input.style.left = (inp.xMid - 27) + 'px';
+                    input.style.top = (inp.yMid - 12) + 'px';
+                    container.appendChild(input);
+                }
+            });
+        }
+
+        function generateTranslationQuestions(context) {
+            const phrases = { A: context.phraseA, B: context.phraseB, C: context.phraseC, Cbar: context.phraseCbar };
+            const mathToFrenchPatterns = [
+                { expression: "\\(P(A \\cap C)\\)", correct: `Probabilité que ${phrases.A} et ${phrases.C}`, distractors: [`Probabilité que ${phrases.A} ou ${phrases.C}`, `Probabilité que ${phrases.A} sachant ${phrases.C}`] },
+                { expression: "\\(P_A(C)\\)", correct: `Probabilité que ${phrases.C} sachant que ${phrases.A}`, distractors: [`Probabilité que ${phrases.A} sachant que ${phrases.C}`, `Probabilité que ${phrases.A} et ${phrases.C}`] },
+                { expression: "\\(P_{\\overline{C}}(B)\\)", correct: `Probabilité que ${phrases.B} sachant que ${phrases.Cbar}`, distractors: [`Probabilité que ${phrases.B} et ${phrases.Cbar}`, `Probabilité que ${phrases.Cbar} sachant que ${phrases.B}`] }
+            ];
+            const randomMathFr = mathToFrenchPatterns[Math.floor(Math.random() * mathToFrenchPatterns.length)];
+            const frenchToMathPatterns = [
+                { text: `Probabilité que ${phrases.B} sachant que ${phrases.C}`, latex: "\\(P_C(B)\\)", simple: `P(B sachant C)` },
+                { text: `Probabilité que ${phrases.A} ou ${phrases.C}`, latex: "\\(P(A \\cup C)\\)", simple: `P(A union C)` },
+                { text: `Probabilité que ${phrases.Cbar} et ${phrases.A}`, latex: "\\(P(\\overline{C} \\cap A)\\)", simple: `P(non C inter A)` }
+            ];
+            const randomFrMath = frenchToMathPatterns[Math.floor(Math.random() * frenchToMathPatterns.length)];
+            return { mathToFrench: randomMathFr, frenchToMath: randomFrMath };
+        }
+
+        function generateExercise(domainFilter = 'all') {
+            submitted = false;
+            const container = document.getElementById('exercise-container');
+            container.innerHTML = '';
+            let pool = domainFilter === 'industry' ? industrialContexts : (domainFilter === 'biology' ? biologyContexts : [...industrialContexts, ...biologyContexts]);
+            const context = pool[Math.floor(Math.random() * pool.length)];
+
+            const pA = round(rand(0.2, 0.8), 2);
+            const pCA = round(rand(0.03, 0.45), 2);
+            const pCB = round(rand(0.03, 0.45), 2);
+            const pC = round(pA * pCA + (1 - pA) * pCB, 4);
+            const pCbar = round(1 - pC, 4);
+            const pAgivenC = round((pA * pCA) / pC, 4);
+            const pBgivenCbar = round(((1 - pA) * (1 - pCB)) / pCbar, 4);
+            const pAinterC = round(pA * pCA, 4);
+            const pBinterC = round((1 - pA) * pCB, 4);
+            const m = randInt(2, 3);
+            let probsX = [];
+            for (let k = 0; k <= m; k++) {
+                const coeff = (k === 0 || k === m) ? 1 : (m === 2 ? 2 : 3);
+                probsX.push(round(coeff * Math.pow(pC, k) * Math.pow(1 - pC, m - k), 6));
+            }
+            const esperance = round(probsX.reduce((acc, p, idx) => acc + idx * p, 0), 4);
+            const variance = round(probsX.reduce((acc, p, idx) => acc + idx * idx * p, 0) - esperance * esperance, 4);
+            const ecartType = round(Math.sqrt(variance), 4);
+            const modeK = probsX.indexOf(Math.max(...probsX));
+            const pXle1 = round(probsX[0] + probsX[1], 5);
+            const pXge1 = round(1 - probsX[0], 5);
+
+            const formats = ['tree', 'table', 'none'];
+            const format = formats[Math.floor(Math.random() * formats.length)];
+            const translation = generateTranslationQuestions(context);
+
+            currentExercise = {
+                contextName: context.name,
+                domain: pool === industrialContexts ? 'industry' : 'biology',
+                format: format,
+                params: { pA, pCA, pCB, pC, pCbar, pAgivenC, pBgivenCbar, pAinterC, pBinterC, m, probsX, esperance, variance, ecartType, modeK, pXle1, pXge1 },
+                translation: translation,
+                answers: []
+            };
+
+            let html = `<div class="exercise-box">`;
+            html += `<div class="context">${context.text(pA, pCA, pCB)}</div>`;
+            html += `<h3>📌 Partie A : Probabilités conditionnelles</h3>`;
+
+            if (format === 'tree') {
+                html += `<p>Compléter l'arbre pondéré ci‑dessous en indiquant les probabilités manquantes sur les branches en pointillés.</p>`;
+                html += `<div id="tree-container" class="tree-container"></div>`;
+            } else if (format === 'table') {
+                html += `<p>Compléter le tableau croisé des probabilités (valeurs exactes).</p>`;
+                html += `<table id="prob-table">
+                    <tr><th></th><th>\\(C\\)</th><th>\\(\\overline{C}\\)</th><th>Total</th></tr>
+                    <tr><td>\\(A\\)</td>
+                        <td><input type="number" step="any" id="table-AandC"></td>
+                        <td><input type="number" step="any" id="table-AandCbar"></td>
+                        <td id="table-totalA">${pA.toFixed(3)}</td></tr>
+                    <tr><td>\\(B\\)</td>
+                        <td><input type="number" step="any" id="table-BandC"></td>
+                        <td><input type="number" step="any" id="table-BandCbar"></td>
+                        <td><input type="number" step="any" id="table-totalB"></td></tr>
+                    <tr><td>Total</td>
+                        <td><input type="number" step="any" id="table-totalC"></td>
+                        <td><input type="number" step="any" id="table-totalCbar"></td>
+                        <td>1</td></tr>
+                </table>`;
+                html += `<p><em>On donne \\(P_A(C)=${pCA.toFixed(3)}\\) et \\(P_B(C)=${pCB.toFixed(3)}\\).</em></p>`;
+            }
+
+            html += `<div class="question"><label>Calculer \\(P(C)\\) :</label> <input type="number" step="any" id="probC"> <span class="feedback" id="fb-probC"></span></div>`;
+            html += `<div class="question"><label>Calculer \\(P_C(A)\\) (probabilité de \\(A\\) sachant \\(C\\)) :</label> <input type="number" step="any" id="probAgivenC"> <span class="feedback" id="fb-probAgivenC"></span></div>`;
+            html += `<div class="question"><label>Déterminer \\(P(A \\cap C)\\) et \\(P(B \\cap C)\\) :</label> 
+                \\(P(A \\cap C)=\\) <input type="number" step="any" id="pAinterC"> 
+                \\(P(B \\cap C)=\\) <input type="number" step="any" id="pBinterC"> 
+                <span class="feedback" id="fb-pAinterC"></span>
+                <span class="feedback" id="fb-pBinterC"></span></div>`;
+            html += `<div class="question"><label>Calculer \\(P_{\\overline{C}}(B)\\) (probabilité que l'objet provienne de \\(B\\) sachant qu'il n'est pas \\(C\\)) :</label> <input type="number" step="any" id="pBgivenCbar"> <span class="feedback" id="fb-pBgivenCbar"></span></div>`;
+            html += `<div class="question"><label>Les événements \\(A\\) et \\(C\\) sont-ils indépendants ?</label>
+                <select id="independence"><option value="">-- Choisir --</option><option value="yes">Oui</option><option value="no">Non</option></select>
+                <span class="feedback" id="fb-independence"></span>
+                <div class="independence-justify"><em>Justification :</em> <input type="text" id="justifyIndep" style="width:60%;" placeholder="Comparez P(A∩C) et P(A)×P(C)"></div>
+            </div>`;
+
+            html += `<h4>🈯 Traductions français / mathématiques</h4>`;
+            html += `<div class="question"><label>Traduire en français : ${translation.mathToFrench.expression}</label>
+                <select id="transMathFr"><option value="">-- Choisir --</option>
+                    ${[translation.mathToFrench.correct, ...translation.mathToFrench.distractors].sort(() => Math.random() - 0.5).map(opt => `<option value="${opt.replace(/"/g, '&quot;')}">${opt}</option>`).join('')}
+                </select>
+                <span class="feedback" id="fb-transMathFr"></span>
+            </div>`;
+            html += `<div class="question"><label>Traduire par une expression mathématique : « ${translation.frenchToMath.text} »</label>
+                <input type="text" id="transFrMathInput" placeholder="Votre réponse...">
+                <span class="feedback" id="fb-transFrMath"></span>
+                <div class="translation-note">
+                    <strong>Notation :</strong> Utilisez <code>inter</code> pour ∩, <code>union</code> pour ∪, <code>sachant</code> pour la probabilité conditionnelle, <code>non</code> pour le complémentaire.<br>
+                    Exemples : <code>P(A inter B)</code>, <code>P(C sachant A)</code>, <code>P(non A union B)</code>.
+                </div>
+            </div>`;
+
+            html += `<h3>📊 Partie B : Loi de probabilité d'une variable aléatoire</h3>`;
+            html += `<p>On prélève maintenant <b>${m}</b> ${context.itemPlural} au hasard, successivement et <b>avec remise</b>. On note \\(X\\) le nombre de ${context.itemPlural} ${context.eventC} parmi ces ${m} ${context.itemPlural}. Les tirages sont indépendants.</p>`;
+            html += `<p><em>Compléter la loi de probabilité de \\(X\\) (arrondir à \\(10^{-4}\\) si nécessaire) et vérifier que la somme vaut 1.</em></p>`;
+            html += `<table class="law-table"><tr><th>\\(k\\)</th>`;
+            for (let k = 0; k <= m; k++) html += `<th>${k}</th>`;
+            html += `<th>Somme</th></tr><tr><td>\\(P(X=k)\\)</td>`;
+            for (let k = 0; k <= m; k++) html += `<td><input type="number" step="any" id="probX${k}" style="width:85px;"></td>`;
+            html += `<td><input type="number" step="any" id="sumProbs" style="width:85px;"></td></tr></table>`;
+            html += `<div class="question"><label>Probabilité qu'il y ait <b>au plus un</b> ${context.itemSing} ${context.eventC} : \\(P(X \\le 1)\\)</label> <input type="number" step="any" id="ple1"> <span class="feedback" id="fb-ple1"></span></div>`;
+            html += `<div class="question"><label>Probabilité qu'il y ait <b>au moins un</b> ${context.itemSing} ${context.eventC} : \\(P(X \\ge 1)\\)</label> <input type="number" step="any" id="pge1"> <span class="feedback" id="fb-pge1"></span></div>`;
+            html += `<div class="question"><label>Quelle est la valeur de \\(k\\) la plus probable (le mode) ?</label> <input type="number" id="modeK" style="width:70px;"> <span class="feedback" id="fb-modeK"></span></div>`;
+            html += `<div class="question"><label>Espérance \\(E(X)\\) :</label> <input type="number" step="any" id="espX"> <span class="feedback" id="fb-espX"></span></div>`;
+            html += `<div class="question"><label>Variance \\(V(X)\\) :</label> <input type="number" step="any" id="varX"> <span class="feedback" id="fb-varX"></span></div>`;
+            html += `<div class="question"><label>Écart-type \\(\\sigma(X)\\) :</label> <input type="number" step="any" id="sigmaX"> <span class="feedback" id="fb-sigmaX"></span></div>`;
+            html += `<div class="question"><label>Interprétez l'écart-type dans le contexte de cet exercice :</label><br>
+                <textarea id="interpretEcart" style="width:80%; height:60px;" placeholder="Exprimez concrètement ce que signifie la valeur de l'écart‑type..."></textarea>
+            </div>`;
+            html += `<div id="interpretation-block"></div>`;
+            
+            // --- BLOC DE BOUTONS MIS À JOUR ---
+            html += `<div style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; margin-top: 25px;">`;
+            html += `<button class="submit-btn" style="margin: 0;" onclick="submitExercise(false)">✅ Valider l'exercice</button>`;
+            html += `<button class="submit-btn" style="margin: 0; background: #8e44ad;" onclick="submitExercise(true)">💡 Correction (Enregistre JSON)</button>`;
+            html += `</div>`;
+            
+            html += `</div>`;
+            container.innerHTML = html;
+
+            if (format === 'tree') {
+                drawTree('tree-container', pA, pCA, pCB, ['B', 'CbarA', 'CbarB']);
+            }
+            if (window.MathJax) {
+                MathJax.typesetClear();
+                MathJax.typesetPromise();
+            }
+        }
+
+        // --- FONCTION DE VALIDATION MISE À JOUR ---
+        // Le paramètre isAutoCorrection permet d'afficher les réponses correctes et de sauvegarder automatiquement
+        function submitExercise(isAutoCorrection = false) {
+            if (!currentExercise || submitted) return;
+            submitted = true;
+            const ex = currentExercise;
+            const params = ex.params;
+            const format = ex.format;
+            const answers = [];
+            const tol = 0.005, tolProb = 0.00015;
+
+            function check(id, correct, tolerance, label) {
+                const input = document.getElementById(id);
+                const fb = document.getElementById('fb-' + id);
+                const val = input ? parseFloat(input.value.replace(',', '.')) : NaN;
+                const ok = !isNaN(val) && Math.abs(val - correct) < tolerance;
+                if (input) input.disabled = true;
+                if (fb) {
+                    fb.textContent = ok ? '✔️' : '❌';
+                    fb.className = 'feedback ' + (ok ? 'correct' : 'incorrect');
+                }
+                answers.push({ id, label, correct, user: isNaN(val) ? null : val, correctFlag: ok });
+                return ok;
+            }
+
+            if (format === 'tree') {
+                check('tree-B', round(1 - params.pA, 3), tol, 'P(B) sur arbre');
+                check('tree-CbarA', round(1 - params.pCA, 3), tol, 'P(\\overline{C}|A) sur arbre');
+                check('tree-CbarB', round(1 - params.pCB, 3), tol, 'P(\\overline{C}|B) sur arbre');
+            }
+            if (format === 'table') {
+                const pB = round(1 - params.pA, 3);
+                check('table-AandC', params.pAinterC, tol, 'P(A∩C)');
+                check('table-AandCbar', round(params.pA * (1 - params.pCA), 4), tol, 'P(A∩\\overline{C})');
+                check('table-BandC', params.pBinterC, tol, 'P(B∩C)');
+                check('table-BandCbar', round(pB * (1 - params.pCB), 4), tol, 'P(B∩\\overline{C})');
+                check('table-totalB', pB, tol, 'Total B');
+                check('table-totalC', params.pC, tol, 'Total C');
+                check('table-totalCbar', params.pCbar, tol, 'Total \\overline{C}');
+            }
+            check('probC', params.pC, tol, 'P(C)');
+            check('probAgivenC', params.pAgivenC, tol, 'P_C(A)');
+            check('pAinterC', params.pAinterC, tol, 'P(A∩C)');
+            check('pBinterC', params.pBinterC, tol, 'P(B∩C)');
+            check('pBgivenCbar', params.pBgivenCbar, tol, 'P_{\\overline{C}}(B)');
+
+            const indepSelect = document.getElementById('independence');
+            const justifyInput = document.getElementById('justifyIndep');
+            const actualIndep = Math.abs(params.pAinterC - params.pA * params.pC) < 0.001;
+            const userIndepYes = indepSelect?.value === 'yes';
+            const indepOk = (actualIndep && userIndepYes) || (!actualIndep && indepSelect?.value === 'no');
+            if (indepSelect) indepSelect.disabled = true;
+            if (justifyInput) justifyInput.disabled = true;
+            document.getElementById('fb-independence').textContent = indepOk ? '✔️' : '❌';
+            answers.push({ id: 'independence', label: 'Indépendance A et C', correct: actualIndep ? 'yes' : 'no', user: indepSelect?.value || null, correctFlag: indepOk });
+
+            const transMathFrSelect = document.getElementById('transMathFr');
+            const mathFrCorrect = ex.translation.mathToFrench.correct;
+            const mathFrOk = transMathFrSelect?.value === mathFrCorrect;
+            if (transMathFrSelect) transMathFrSelect.disabled = true;
+            document.getElementById('fb-transMathFr').textContent = mathFrOk ? '✔️' : '❌';
+            answers.push({ id: 'transMathFr', label: 'Traduction math→fr', correct: mathFrCorrect, user: transMathFrSelect?.value || null, correctFlag: mathFrOk });
+
+            const transFrMathInput = document.getElementById('transFrMathInput');
+            const frMathExpectedSimple = ex.translation.frenchToMath.simple.toLowerCase().replace(/\s+/g, '');
+            let frMathOk = false;
+            if (transFrMathInput) {
+                const userVal = transFrMathInput.value.trim().toLowerCase().replace(/\s+/g, '');
+                frMathOk = (userVal === frMathExpectedSimple);
+                transFrMathInput.disabled = true;
+            }
+            document.getElementById('fb-transFrMath').textContent = frMathOk ? '✔️' : '❌';
+            answers.push({ id: 'transFrMath', label: 'Traduction fr→math', correct: ex.translation.frenchToMath.simple, user: transFrMathInput?.value || null, correctFlag: frMathOk });
+
+            for (let k = 0; k <= params.m; k++) check(`probX${k}`, params.probsX[k], tolProb, `P(X=${k})`);
+            check('sumProbs', 1, tolProb, 'Somme des probabilités');
+            check('ple1', params.pXle1, tolProb, 'P(X≤1)');
+            check('pge1', params.pXge1, tolProb, 'P(X≥1)');
+            check('modeK', params.modeK, 0.1, 'Mode');
+            check('espX', params.esperance, tol, 'E(X)');
+            check('varX', params.variance, tol, 'V(X)');
+            check('sigmaX', params.ecartType, tol, 'σ(X)');
+
+            const interpEcartInput = document.getElementById('interpretEcart');
+            const interpEcartUser = interpEcartInput ? interpEcartInput.value : null;
+            if (interpEcartInput) interpEcartInput.disabled = true;
+            answers.push({ id: 'interpretEcart', label: 'Interprétation écart-type', correct: 'Réponse libre', user: interpEcartUser, correctFlag: true });
+
+            ex.answers = answers;
+            const hints = answers.filter(a => !a.correctFlag).map(a => {
+                let msg = `Erreur sur "${a.label}". `;
+                if (a.id.startsWith('tree-')) msg += `Rappel : P(B)=1-P(A), P(\\overline{C}|A)=1-P(C|A).`;
+                else if (a.id.startsWith('table-')) msg += `Utilisez P(A∩C)=P(A)×P_A(C).`;
+                else if (a.id === 'probC') msg += `Probabilités totales : P(C)=P(A)P_A(C)+P(B)P_B(C).`;
+                else if (a.id === 'probAgivenC') msg += `Bayes : P_C(A)=P(A∩C)/P(C).`;
+                else if (a.id === 'pAinterC' || a.id === 'pBinterC') msg += `P(A∩C)=P(A)×P_A(C).`;
+                else if (a.id === 'pBgivenCbar') msg += `P_{\\overline{C}}(B)=P(B∩\\overline{C})/P(\\overline{C}).`;
+                else if (a.id === 'independence') msg += `Calculez P(A)×P(C) et comparez avec P(A∩C).`;
+                else if (a.id === 'transMathFr') msg += `Relisez la définition de la notation.`;
+                else if (a.id === 'transFrMath') msg += `Respectez la syntaxe demandée (inter, union, sachant, non).`;
+                else if (a.id.startsWith('probX')) msg += `Utilisez l'arbre des tirages (probabilité élémentaire p=${params.pC.toFixed(4)}).`;
+                else if (a.id === 'ple1') msg += `P(X≤1)=P(X=0)+P(X=1).`;
+                else if (a.id === 'pge1') msg += `P(X≥1)=1-P(X=0).`;
+                else if (a.id === 'espX') msg += `E(X)=Σ k×P(X=k).`;
+                else if (a.id === 'varX') msg += `V(X)=E(X²)-E²(X).`;
+                else if (a.id === 'sigmaX') msg += `σ(X)=√V(X).`;
+                return msg;
+            });
+
+            resultsLog.push({
+                datetime: new Date().toISOString(),
+                context: ex.contextName,
+                domain: ex.domain,
+                format: ex.format,
+                parameters: ex.params,
+                translation: ex.translation,
+                answers: ex.answers,
+                errorHints: hints
+            });
+
+            const interpDiv = document.getElementById('interpretation-block');
+            if (interpDiv) {
+                interpDiv.className = 'interpretation';
+                interpDiv.innerHTML = `
+                    <strong>Interprétation :</strong>
+                    <ul>
+                        <li>En moyenne, sur ${params.m} pièces prélevées, on attend <b>${params.esperance.toFixed(2)}</b> pièce(s) défectueuse(s).</li>
+                        <li>L'écart-type de <b>${params.ecartType.toFixed(4)}</b> signifie que le nombre de pièces défectueuses varie typiquement de ±${params.ecartType.toFixed(2)} autour de cette moyenne.</li>
+                    </ul>
+                `;
+            }
+
+            // GESTION DU BOUTON CORRECTION
+            if (isAutoCorrection) {
+                answers.forEach(ans => {
+                    if (!ans.correctFlag) {
+                        const el = document.getElementById(ans.id);
+                        if (el) {
+                            if (el.tagName === 'SELECT') {
+                                for (let i = 0; i < el.options.length; i++) {
+                                    if (el.options[i].value === String(ans.correct)) el.selectedIndex = i;
+                                }
+                            } else {
+                                el.value = typeof ans.correct === 'number' ? round(ans.correct, 4) : ans.correct;
+                            }
+                            // Mise en évidence visuelle de la correction apportée
+                            el.style.backgroundColor = '#ffe6e6';
+                            el.style.color = '#c0392b';
+                            el.style.fontWeight = 'bold';
+                        }
+                    }
+                });
+                // Déclenchement automatique du téléchargement JSON
+                downloadJSON();
+            } else {
+                if (hints.length > 0) {
+                    alert("Certaines réponses sont incorrectes. Consultez le rapport JSON pour les indications détaillées.");
+                } else {
+                    alert("Bravo ! Toutes les réponses sont correctes.");
+                }
+            }
+        }
+
+        function downloadJSON() {
+            const jsonStr = JSON.stringify(resultsLog, null, 2);
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'rapport_exercices_probabilites.json';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(a.href);
+        }
+
+        const btnMalvoyant = document.querySelector("button[onclick=\"document.body.classList.toggle('malvoyant-mode')\"]");
+        btnMalvoyant.addEventListener('click', () => {
+            if (currentExercise && currentExercise.format === 'tree') {
+                const ex = currentExercise.params;
+                drawTree('tree-container', ex.pA, ex.pCA, ex.pCB, ['B', 'CbarA', 'CbarB']);
+                if (window.MathJax) {
+                    MathJax.typesetClear();
+                    MathJax.typesetPromise();
+                }
+            }
+        });
+
+        window.addEventListener('load', () => generateExercise('all'));
+    </script>
+</body>
+</html>
