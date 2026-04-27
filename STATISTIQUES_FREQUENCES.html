@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exercices - Fréquences & Représentations Graphiques (STI2D / STL)</title>
+    
+    <script>
+        window.MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady().then(() => {
+                        console.log('MathJax initialisé.');
+                    });
+                }
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        :root {
+            --bg-color: #f0f4f8; --text-color: #333333; --box-bg: #ffffff;
+            --accent-color: #1e3c72; --accent-hover: #2a5298;
+            --border-color: #dce6f0; --feedback-correct: #1e7e34; --feedback-error: #c00;
+        }
+
+        /* Accessibilité : Contraste Élevé */
+        body.high-contrast {
+            --bg-color: #121212; --text-color: #ffffff; --box-bg: #222222;
+            --accent-color: #66b2ff; --accent-hover: #99ccff; --border-color: #555555;
+            --feedback-correct: #4ade80; --feedback-error: #f87171;
+        }
+
+        /* Accessibilité : Mode Dys */
+        body.dys-mode {
+            font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+            letter-spacing: 0.1em; word-spacing: 0.2em; line-height: 2;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-color); color: var(--text-color);
+            margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .main-container {
+            max-width: 1000px; width: 100%; background: var(--box-bg);
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); padding: 30px;
+        }
+
+        h1 { color: var(--accent-color); text-align: center; margin-top: 0; }
+        h3 { color: var(--accent-color); border-bottom: 2px solid var(--border-color); padding-bottom: 5px; }
+
+        .controls { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 25px; }
+        
+        button {
+            background: var(--accent-color); color: white; border: none; padding: 10px 18px;
+            border-radius: 25px; font-size: 14px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        button:hover { background: var(--accent-hover); transform: translateY(-1px); }
+        button.action { background: #d35400; margin-top: 20px; font-size: 16px; width: 100%; }
+        button.action:hover { background: #e67e22; }
+        button.tools { background: #555; }
+        button.tools:hover { background: #333; }
+
+        .exercise-box {
+            background: var(--bg-color); border: 1px solid var(--border-color);
+            border-radius: 12px; padding: 20px; margin-top: 15px; font-size: 1.05rem;
+        }
+
+        .question { margin: 15px 0; padding-left: 15px; border-left: 4px solid var(--accent-color); }
+        
+        input[type="number"], select {
+            width: 100px; padding: 6px; margin-left: 8px; border: 1px solid #ccc;
+            border-radius: 5px; font-size: 1rem;
+        }
+        select { width: auto; max-width: 400px; }
+
+        .feedback { display: inline-block; margin-left: 10px; font-weight: bold; }
+        .correct { color: var(--feedback-correct); }
+        .incorrect { color: var(--feedback-error); }
+
+        /* Composants interactifs */
+        .tree-container, .graph-container {
+            position: relative; width: 100%; max-width: 600px; height: 350px;
+            margin: 20px auto; background: #fff; border-radius: 8px; border: 1px solid #ccc;
+        }
+        .tree-container canvas, .graph-container canvas { width: 100%; height: 100%; }
+        
+        .tree-input {
+            position: absolute; width: 60px; text-align: center; font-size: 0.9rem;
+            border: 1px solid #0056b3; border-radius: 4px; background: #e6f2ff;
+            transform: translate(-50%, -50%); z-index: 10;
+        }
+
+        table.stats-table { border-collapse: collapse; margin: 15px auto; background: white; width: 80%; }
+        table.stats-table th, table.stats-table td { border: 1px solid #999; padding: 8px; text-align: center; }
+
+        /* Corrigé et Impression */
+        .correction-hidden { position: absolute !important; left: -9999px !important; top: 0; visibility: hidden; height: 0; overflow: hidden; }
+        .correction-visible {
+            position: static !important; visibility: visible; height: auto;
+            background: #eaffea; border-left: 4px solid var(--feedback-correct);
+            padding: 20px; margin-top: 20px; border-radius: 8px; color: #333;
+        }
+
+        @media print {
+            .controls, button, .feedback { display: none !important; }
+            body { background: white; color: black; }
+            .main-container { box-shadow: none; padding: 0; }
+            .correction-hidden { 
+                position: static !important; visibility: visible; height: auto;
+                border-top: 2px dashed #000; padding-top: 20px; margin-top: 30px;
+            }
+            input, select { border: none; border-bottom: 1px solid black; appearance: none; -webkit-appearance: none; }
+        }
+
+        /* Popup Droits d'auteur */
+        #overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; }
+        #copyright-popup {
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: var(--box-bg); padding: 30px; border: 2px solid var(--border-color);
+            z-index: 1000; box-shadow: 0 4px 15px rgba(0,0,0,0.3); max-width: 600px; border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-container">
+    <div class="controls">
+        <button class="tools" onclick="document.body.classList.toggle('dys-mode')">👁️ Mode Dys</button>
+        <button class="tools" onclick="document.body.classList.toggle('high-contrast')">🌗 Contraste</button>
+        <button class="tools" onclick="togglePopup()">⚖️ Droits d'auteur</button>
+        <button class="tools" onclick="window.print()">🖨️ Générer PDF (avec corrigé)</button>
+        <button class="tools" onclick="telechargerJSON()">💾 Exporter Résultats (JSON)</button>
+    </div>
+
+    <h1>📊 Statistiques & Représentations Graphiques</h1>
+    
+    <div class="controls">
+        <button onclick="genererExercice('industrie')">🏭 Générer : Contexte Industriel</button>
+        <button onclick="genererExercice('biologie')">🧬 Générer : Contexte Biologique</button>
+    </div>
+
+    <div id="exercise-container">
+        <div class="exercise-box" style="text-align: center;">Veuillez sélectionner un contexte pour générer un nouvel exercice.</div>
+    </div>
+    <div id="correction-container" class="correction-hidden"></div>
+</div>
+
+<div id="overlay" onclick="togglePopup()"></div>
+<div id="copyright-popup">
+    <h2>⚖️ Droits d'Auteur et Licence d'Utilisation</h2>
+    <p><strong>Auteur :</strong> Yann Merdy (yann.merdy@gmail.com) - Avril 2026</p>
+    <p><strong>Licence d'Utilisation Non Commerciale</strong></p>
+    <p>Ce code HTML/CSS/JavaScript ainsi que le contenu généré par l'application sont la propriété intellectuelle exclusive de l'auteur, Yann Merdy.</p>
+    <p><strong>Conditions :</strong> Utilisation Privée et Éducative (Autorisée) ; Utilisation Commerciale (Interdite). Toute reproduction doit conserver cette notice.</p>
+    <button onclick="togglePopup()">Fermer</button>
+</div>
+
+<script>
+// --- Télémétrie & État ---
+let sessionLog = [];
+let currentEx = null;
+
+// --- Contextes ---
+const indus = [
+    { n: "Usinage", A: "Machine M1", B: "Machine M2", C: "Défaut", varTxt: "diamètre des pièces (mm)" },
+    { n: "Électronique", A: "Ligne L1", B: "Ligne L2", C: "Défaut soudure", varTxt: "résistance (ohms)" },
+    { n: "Textile", A: "Fournisseur F1", B: "Fournisseur F2", C: "Accroc", varTxt: "résistance à la traction (N)" },
+    { n: "Embouteillage", A: "Remplisseuse R1", B: "Remplisseuse R2", C: "Mal remplie", varTxt: "volume rempli (mL)" },
+    { n: "Chimie", A: "Réacteur X", B: "Réacteur Y", C: "Impur", varTxt: "concentration (g/L)" },
+    { n: "Automobile", A: "Usine U1", B: "Usine U2", C: "Panne moteur", varTxt: "puissance au banc (ch)" },
+    { n: "Aéronautique", A: "Titane", B: "Aluminium", C: "Fissure", varTxt: "charge de rupture (kN)" },
+    { n: "Pharma", A: "Atelier A", B: "Atelier B", C: "Non conforme", varTxt: "masse du principe actif (mg)" },
+    { n: "Solaire", A: "Modèle Alpha", B: "Modèle Beta", C: "Rendement faible", varTxt: "tension délivrée (V)" },
+    { n: "Scierie", A: "Sapin", B: "Chêne", C: "Nœud", varTxt: "longueur de découpe (m)" }
+];
+
+const bio = [
+    { n: "Dépistage", A: "Groupe Risque", B: "Groupe Sain", C: "Test Positif", varTxt: "taux d'anticorps (UI/mL)" },
+    { n: "Agriculture", A: "Variété V1", B: "Variété V2", C: "Maladie", varTxt: "rendement (q/ha)" },
+    { n: "Environnement", A: "Rivière R1", B: "Rivière R2", C: "Pollué", varTxt: "taux de nitrates (mg/L)" },
+    { n: "Microbiologie", A: "Milieu M1", B: "Milieu M2", C: "Contaminé", varTxt: "diamètre de colonie (mm)" },
+    { n: "Épidémie", A: "Zone Urbaine", B: "Zone Rurale", C: "Infecté", varTxt: "durée d'incubation (jours)" },
+    { n: "Océanographie", A: "Surface", B: "Profondeur", C: "Blanchi", varTxt: "température de l'eau (°C)" },
+    { n: "Recherche", A: "Lignée L1", B: "Lignée L2", C: "Guérison", varTxt: "masse tumorale (g)" },
+    { n: "Botanique", A: "Lot Graines G1", B: "Lot Graines G2", C: "Germination", varTxt: "hauteur de la pousse (cm)" },
+    { n: "Hématologie", A: "Groupe O", B: "Autre", C: "Rhésus Positif", varTxt: "taux d'hémoglobine (g/dL)" },
+    { n: "Génétique", A: "Cellule C1", B: "Cellule C2", C: "Mutation", varTxt: "taille de l'ADN (kbp)" }
+];
+
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function round(n, d=3) { return Math.round(n * Math.pow(10, d)) / Math.pow(10, d); }
+
+// --- Génération d'exercice ---
+function genererExercice(domaine) {
+    document.getElementById('correction-container').className = 'correction-hidden';
+    const liste = domaine === 'industrie' ? indus : bio;
+    const ctx = liste[Math.floor(Math.random() * liste.length)];
+
+    // Variables Partie A (Fréquences)
+    const fA = round(rand(0.3, 0.7), 2);
+    const fB = round(1 - fA, 2);
+    const fCA = round(rand(0.05, 0.25), 2);
+    const fCB = round(rand(0.05, 0.25), 2);
+    
+    const fA_C = round(fA * fCA, 4);
+    const fB_C = round(fB * fCB, 4);
+    const fC = round(fA_C + fB_C, 4);
+    const fC_A = round(fA_C / fC, 4);
+
+    // QCM Traduction : On veut 5 options avec "Autre" en E. La bonne réponse est équitablement répartie.
+    const vraieReponse = `La fréquence de ${ctx.A} sachant ${ctx.C}`;
+    let faussesReponsesPool = [
+        `La fréquence de ${ctx.A} et ${ctx.C}`,
+        `La fréquence de ${ctx.C} sachant ${ctx.A}`,
+        `La fréquence totale de ${ctx.A}`,
+        `La probabilité de ${ctx.C}`,
+        `L'intersection de ${ctx.A} et ${ctx.C}`,
+        `L'union de ${ctx.C} et ${ctx.A}`
+    ].sort(() => Math.random() - 0.5);
+
+    let opts = [];
+    let isAutreCorrect = Math.random() < 0.2; // 20% de chance que "Autre" soit la bonne réponse
+
+    if (isAutreCorrect) {
+        // La bonne réponse n'est PAS affichée. On met 4 fausses.
+        opts = faussesReponsesPool.slice(0, 4).map(t => ({ texte: t, val: "Faux" }));
+        opts.push({ texte: "Autre", val: "Vrai" });
+    } else {
+        // La bonne réponse EST affichée parmi A, B, C ou D.
+        opts = faussesReponsesPool.slice(0, 3).map(t => ({ texte: t, val: "Faux" }));
+        opts.push({ texte: vraieReponse, val: "Vrai" });
+        opts.sort(() => Math.random() - 0.5); // Mélange des 4 premières
+        opts.push({ texte: "Autre", val: "Faux" }); // E est toujours "Autre"
+    }
+
+    let selectHTML = `<select id="qTrad"><option value="">-- Choisir --</option>`;
+    opts.forEach((o, i) => { selectHTML += `<option value="${o.val}">${String.fromCharCode(65+i)}. ${o.texte}</option>`; });
+    selectHTML += `</select>`;
+
+    const isTree = Math.random() > 0.5;
+
+    // --- Variables Partie B (Graphiques Aléatoires) ---
+    const chartTypes = ['boite', 'histogramme', 'polygone', 'camembert'];
+    const bType = chartTypes[Math.floor(Math.random() * chartTypes.length)];
+    
+    let htmlPartieB = `<h3>📊 Partie B : Statistiques Descriptives</h3>`;
+    let bData = {};
+
+    if (bType === 'boite') {
+        let serie = Array.from({length: 15}, () => round(rand(10, 50), 1)).sort((a,b)=>a-b);
+        bData = { min: serie[0], q1: serie[3], med: serie[7], q3: serie[11], max: serie[14], serie };
+        htmlPartieB += `
+            <p>On a mesuré la variable "<strong>${ctx.varTxt}</strong>" sur un échantillon de 15 éléments.</p>
+            <p>Série ordonnée : ${serie.join(' ; ')}</p>
+            <div class="question">
+                <label>Déterminer la médiane ($Me$) et l'écart interquartile ($Q_3 - Q_1$) :</label><br>
+                $Me =$ <input type="number" step="0.1" id="q_b1"> <span class="feedback" id="fb_b1"></span><br>
+                $Q_3 - Q_1 =$ <input type="number" step="0.1" id="q_b2"> <span class="feedback" id="fb_b2"></span>
+            </div>
+            <p>Le diagramme en boîte correspondant est généré ci-dessous :</p>
+            <div class="graph-container"><canvas id="statCanvas" width="600" height="250"></canvas></div>
+        `;
+    } 
+    else if (bType === 'histogramme' || bType === 'polygone') {
+        const base = Math.floor(rand(10, 30));
+        const amp = 5;
+        bData = { 
+            bins: [base, base+amp, base+2*amp, base+3*amp, base+4*amp], 
+            freqs: [Math.floor(rand(2,10)), Math.floor(rand(10,20)), Math.floor(rand(15,25)), Math.floor(rand(5,15))],
+            amp: amp
+        };
+        let effectifTotal = bData.freqs.reduce((a,b)=>a+b, 0);
+        let nomGraphe = bType === 'histogramme' ? "L'histogramme" : "Le polygone des fréquences";
+        
+        htmlPartieB += `
+            <p>${nomGraphe} ci-dessous représente la distribution de la variable "<strong>${ctx.varTxt}</strong>" mesurée sur un échantillon de ${effectifTotal} éléments.</p>
+            <div class="graph-container"><canvas id="statCanvas" width="600" height="300"></canvas></div>
+            <div class="question">
+                <label>Quelle est l'amplitude commune des classes ?</label><br>
+                Amplitude = <input type="number" step="1" id="q_b1"> <span class="feedback" id="fb_b1"></span><br>
+                <label>Quel est l'effectif de la classe modale (la plus fréquente) ?</label><br>
+                Effectif = <input type="number" step="1" id="q_b2"> <span class="feedback" id="fb_b2"></span>
+            </div>
+        `;
+    }
+    else if (bType === 'camembert') {
+        let p1 = Math.floor(rand(40, 60));
+        let p2 = Math.floor(rand(20, 30));
+        let p3 = 100 - p1 - p2;
+        bData = {
+            labels: ["Conforme", "Défaut Mineur", "Défaut Majeur"],
+            pct: [p1, p2, p3]
+        };
+        // Calcul angle pour la plus petite part
+        bData.angleQuestion = round((p3 / 100) * 360, 1);
+        htmlPartieB += `
+            <p>Le diagramme circulaire ci-dessous représente la répartition de l'état des éléments étudiés.</p>
+            <div class="graph-container"><canvas id="statCanvas" width="400" height="300"></canvas></div>
+            <div class="question">
+                <label>D'après le graphique, quel est le pourcentage de "${bData.labels[1]}" ?</label><br>
+                % = <input type="number" step="1" id="q_b1"> <span class="feedback" id="fb_b1"></span><br>
+                <label>Quel est l'angle (en degrés) du secteur correspondant à "${bData.labels[2]}" ?</label><br>
+                Angle = <input type="number" step="0.1" id="q_b2"> <span class="feedback" id="fb_b2"></span>
+            </div>
+        `;
+    }
+
+    currentEx = { ctx, fA, fB, fCA, fCB, fA_C, fB_C, fC, fC_A, bType, bData, isAutreCorrect, vraieReponse };
+
+    // --- Assemblage HTML final ---
+    let html = `
+        <div class="exercise-box">
+            <h3>📌 Partie A : Étude des Fréquences</h3>
+            <p>Dans le contexte "<strong>${ctx.n}</strong>", on donne :</p>
+            <ul>
+                <li>La fréquence de ${ctx.A} est $f(A) = ${fA}$.</li>
+                <li>Parmi ${ctx.A}, la fréquence de l'événement "${ctx.C}" est $f_A(C) = ${fCA}$.</li>
+                <li>Parmi ${ctx.B}, la fréquence de "${ctx.C}" est $f_B(C) = ${fCB}$.</li>
+            </ul>
+    `;
+
+    if (isTree) {
+        html += `
+            <p>1. Compléter l'arbre des fréquences :</p>
+            <div id="tree-canvas-container" class="tree-container">
+                <canvas id="treeCanvas" width="600" height="350"></canvas>
+                <input type="number" step="0.01" id="in_fB" class="tree-input" style="left: 150px; top: 250px;" placeholder="f(B)">
+                <input type="number" step="0.01" id="in_fCbarA" class="tree-input" style="left: 360px; top: 150px;" placeholder="f_A(C̄)">
+                <input type="number" step="0.01" id="in_fCbarB" class="tree-input" style="left: 360px; top: 310px;" placeholder="f_B(C̄)">
+            </div>
+        `;
+    } else {
+        html += `
+            <p>1. Compléter le tableau croisé :</p>
+            <table class="stats-table">
+                <tr><th></th><th>$C$</th><th>$\\overline{C}$</th><th>Total</th></tr>
+                <tr><th>$A$</th>
+                    <td><input type="number" step="0.0001" id="in_fAC"></td>
+                    <td><input type="number" step="0.0001" id="in_fACbar"></td>
+                    <td>${fA}</td></tr>
+                <tr><th>$B$</th>
+                    <td><input type="number" step="0.0001" id="in_fBC"></td>
+                    <td><input type="number" step="0.0001" id="in_fBCbar"></td>
+                    <td><input type="number" step="0.01" id="in_fB"></td></tr>
+            </table>
+        `;
+    }
+
+    html += `
+            <div class="question"><label>2. Calculer la fréquence marginale $f(C)$ :</label> 
+                <input type="number" step="0.0001" id="q_fC"> <span class="feedback" id="fb_fC"></span></div>
+            <div class="question"><label>3. Que désigne la notation $f_C(A)$ ?</label><br>
+                ${selectHTML} <span class="feedback" id="fb_qTrad"></span></div>
+            <div class="question"><label>4. Calculer la valeur de $f_C(A)$ (arrondir à $10^{-4}$) :</label> 
+                <input type="number" step="0.0001" id="q_fCA_inv"> <span class="feedback" id="fb_fCA_inv"></span></div>
+            
+            ${htmlPartieB}
+
+            <button class="action" onclick="valider(${isTree})">✅ Valider et Voir la Correction</button>
+        </div>
+    `;
+
+    document.getElementById('exercise-container').innerHTML = html;
+    
+    if (isTree) dessinerArbre('treeCanvas', ctx, fA, fCA, fCB);
+    
+    // Rendu du Graphique Partie B
+    if (bType === 'boite') dessinerBoite('statCanvas', bData.min, bData.q1, bData.med, bData.q3, bData.max);
+    else if (bType === 'histogramme') dessinerHistoPoly('statCanvas', bData, true);
+    else if (bType === 'polygone') dessinerHistoPoly('statCanvas', bData, false);
+    else if (bType === 'camembert') dessinerCamembert('statCanvas', bData);
+
+    if (window.MathJax) MathJax.typesetPromise();
+}
+
+// --- Fonctions de Dessin ---
+function dessinerArbre(id, ctx, fA, fCA, fCB) {
+    const g = document.getElementById(id).getContext('2d');
+    g.clearRect(0,0, 600, 350); g.font = "14px Arial"; g.lineWidth = 2;
+    g.beginPath(); g.moveTo(50, 175); g.lineTo(200, 100); g.stroke();
+    g.beginPath(); g.moveTo(50, 175); g.lineTo(200, 250); g.stroke();
+    g.fillText("A ("+ctx.A+")", 210, 105); g.fillText("B ("+ctx.B+")", 210, 255);
+    g.fillStyle = "blue"; g.fillText(fA, 110, 120); g.fillStyle = "black";
+    
+    g.beginPath(); g.moveTo(300, 100); g.lineTo(450, 50); g.stroke();
+    g.beginPath(); g.moveTo(300, 100); g.setLineDash([5,5]); g.lineTo(450, 150); g.stroke(); g.setLineDash([]);
+    g.fillText("C", 460, 55); g.fillText("C̄", 460, 155);
+    g.fillStyle = "blue"; g.fillText(fCA, 360, 65); g.fillStyle = "black";
+
+    g.beginPath(); g.moveTo(300, 250); g.lineTo(450, 210); g.stroke();
+    g.beginPath(); g.moveTo(300, 250); g.setLineDash([5,5]); g.lineTo(450, 310); g.stroke(); g.setLineDash([]);
+    g.fillText("C", 460, 215); g.fillText("C̄", 460, 315);
+    g.fillStyle = "blue"; g.fillText(fCB, 360, 225); g.fillStyle = "black";
+}
+
+function dessinerBoite(id, min, q1, med, q3, max) {
+    const canvas = document.getElementById(id); const g = canvas.getContext('2d');
+    const m = 50, W = canvas.width - 2*m, R = max - min;
+    const s = (v) => m + ((v - min) / R) * W;
+    g.clearRect(0,0, canvas.width, canvas.height);
+    g.beginPath(); g.moveTo(m, 200); g.lineTo(canvas.width - m, 200); g.stroke();
+    [min, q1, med, q3, max].forEach(v => {
+        let x = s(v); g.beginPath(); g.moveTo(x, 195); g.lineTo(x, 205); g.stroke(); g.fillText(v, x - 10, 220);
+    });
+    g.fillStyle = "rgba(30, 60, 114, 0.2)"; g.strokeStyle = "#1e3c72"; g.lineWidth = 2;
+    g.fillRect(s(q1), 80, s(q3)-s(q1), 80); g.strokeRect(s(q1), 80, s(q3)-s(q1), 80);
+    g.beginPath(); g.moveTo(s(med), 80); g.lineTo(s(med), 160); g.lineWidth = 3; g.stroke();
+    g.lineWidth = 2;
+    g.beginPath(); g.moveTo(s(min), 120); g.lineTo(s(q1), 120); g.stroke();
+    g.beginPath(); g.moveTo(s(q3), 120); g.lineTo(s(max), 120); g.stroke();
+    g.beginPath(); g.moveTo(s(min), 100); g.lineTo(s(min), 140); g.stroke();
+    g.beginPath(); g.moveTo(s(max), 100); g.lineTo(s(max), 140); g.stroke();
+}
+
+function dessinerHistoPoly(id, data, isHisto) {
+    const cvs = document.getElementById(id); const g = cvs.getContext('2d');
+    g.clearRect(0,0, cvs.width, cvs.height);
+    const m = 40, W = cvs.width - 2*m, H = cvs.height - 2*m;
+    const maxF = Math.max(...data.freqs) + 5;
+    const sx = W / data.freqs.length; const sy = H / maxF;
+    
+    // Axes
+    g.beginPath(); g.moveTo(m, m); g.lineTo(m, cvs.height-m); g.lineTo(cvs.width-m, cvs.height-m); g.stroke();
+    g.font = "12px Arial";
+    
+    let polyPoints = [];
+    for(let i=0; i<data.freqs.length; i++) {
+        let x = m + i*sx; let y = cvs.height - m - data.freqs[i]*sy;
+        
+        if(isHisto) {
+            g.fillStyle = "rgba(30,60,114,0.4)"; g.strokeStyle = "#1e3c72"; g.lineWidth = 1;
+            g.fillRect(x, y, sx, data.freqs[i]*sy); g.strokeRect(x, y, sx, data.freqs[i]*sy);
+        }
+        polyPoints.push({px: x + sx/2, py: y});
+        
+        // Labels X
+        g.fillStyle = "black";
+        g.fillText("["+data.bins[i]+";"+data.bins[i+1]+"[", x + sx/4, cvs.height - m + 20);
+    }
+    
+    if(!isHisto) {
+        g.beginPath(); g.strokeStyle = "#d35400"; g.lineWidth = 3;
+        polyPoints.forEach((pt, i) => {
+            if(i===0) g.moveTo(pt.px, pt.py); else g.lineTo(pt.px, pt.py);
+            g.fillStyle = "#d35400"; g.fillRect(pt.px-3, pt.py-3, 6, 6);
+        });
+        g.stroke();
+    }
+    // Labels Y
+    g.fillStyle = "black"; g.fillText(maxF, 10, m + 10);
+}
+
+function dessinerCamembert(id, data) {
+    const cvs = document.getElementById(id); const g = cvs.getContext('2d');
+    g.clearRect(0,0, cvs.width, cvs.height);
+    let cx = 150, cy = 150, r = 100;
+    let colors = ["#4CAF50", "#FFC107", "#F44336"];
+    let startA = 0;
+    
+    data.pct.forEach((p, i) => {
+        let slice = (p / 100) * 2 * Math.PI;
+        g.beginPath(); g.moveTo(cx, cy); g.arc(cx, cy, r, startA, startA + slice);
+        g.fillStyle = colors[i]; g.fill(); g.stroke();
+        startA += slice;
+        
+        // Légende
+        g.fillRect(300, 80 + i*40, 20, 20);
+        g.fillStyle = "black"; g.font = "14px Arial";
+        g.fillText(`${data.labels[i]} (${p}%)`, 330, 95 + i*40);
+    });
+}
+
+function check(id, expected) {
+    const el = document.getElementById(id); const fb = document.getElementById('fb_' + id.replace('in_','').replace('q_',''));
+    if(!el) return { val: null, ok: true };
+    let val = el.value === "Vrai" ? "Vrai" : parseFloat(el.value.replace(',', '.'));
+    let isOk = (typeof expected === "string") ? (val === expected) : (!isNaN(val) && Math.abs(val - expected) <= 0.05);
+    if(fb) { fb.innerHTML = isOk ? "✔️" : "❌"; fb.className = "feedback " + (isOk ? "correct" : "incorrect"); }
+    el.disabled = true; return { val, isOk };
+}
+
+function valider(isTree) {
+    if (!currentEx) return; const c = currentEx; let log = { ctx: c.ctx.n, details: [] };
+
+    if (isTree) {
+        log.details.push(check('in_fB', c.fB)); log.details.push(check('in_fCbarA', round(1 - c.fCA, 2)));
+    } else {
+        log.details.push(check('in_fAC', c.fA_C)); log.details.push(check('in_fB', c.fB));
+    }
+    log.details.push(check('q_fC', c.fC));
+    log.details.push(check('qTrad', "Vrai"));
+    log.details.push(check('q_fCA_inv', c.fC_A));
+
+    let repB1 = "", repB2 = "";
+    if(c.bType === 'boite') {
+        const iqr = round(c.bData.q3 - c.bData.q1, 1);
+        log.details.push(check('q_b1', c.bData.med)); log.details.push(check('q_b2', iqr));
+        repB1 = c.bData.med; repB2 = iqr;
+    } else if(c.bType === 'histogramme' || c.bType === 'polygone') {
+        const maxEffectif = Math.max(...c.bData.freqs);
+        log.details.push(check('q_b1', c.bData.amp)); log.details.push(check('q_b2', maxEffectif));
+        repB1 = c.bData.amp; repB2 = maxEffectif;
+    } else if(c.bType === 'camembert') {
+        log.details.push(check('q_b1', c.bData.pct[1])); log.details.push(check('q_b2', c.bData.angleQuestion));
+        repB1 = c.bData.pct[1] + "\\%"; repB2 = c.bData.angleQuestion + "^{\\circ}";
+    }
+
+    sessionLog.push(log);
+    genererCorrection(c, isTree, repB1, repB2);
+}
+
+function genererCorrection(c, isTree, rb1, rb2) {
+    const cont = document.getElementById('correction-container');
+    let corr = `<h3>Corrigé Détaillé</h3><p><strong>Partie A</strong><br>`;
+    
+    if(isTree) corr += `$\\bullet$ Loi des nœuds : $f(B) = 1 - f(A) = 1 - ${c.fA} = ${c.fB}$.<br>`;
+    else corr += `$\\bullet$ Intersection : $f(A \\cap C) = f(A) \\times f_A(C) = ${c.fA} \\times ${c.fCA} = ${c.fA_C}$.<br>`;
+    
+    corr += `$\\bullet$ Fréquences totales : $f(C) = f(A \\cap C) + f(B \\cap C) = ${c.fA_C} + ${c.fB_C} = ${c.fC}$.<br>`;
+    
+    if(c.isAutreCorrect) corr += `$\\bullet$ Traduction : La bonne traduction était "<strong>${c.vraieReponse}</strong>". Elle n'était pas proposée, il fallait choisir "Autre".<br>`;
+    else corr += `$\\bullet$ Traduction : $f_C(A)$ se lit bien "<strong>${c.vraieReponse}</strong>".<br>`;
+    
+    corr += `$\\bullet$ Inversion : $f_C(A) = \\dfrac{f(A \\cap C)}{f(C)} = \\dfrac{${c.fA_C}}{${c.fC}} \\approx ${c.fC_A}$.</p>`;
+
+    corr += `<p><strong>Partie B (${c.bType})</strong><br>`;
+    if(c.bType === 'boite') {
+        corr += `$\\bullet$ La médiane est la 8ème valeur ordonnée : $Me = ${rb1}$.<br>`;
+        corr += `$\\bullet$ L'écart interquartile est $Q_3 - Q_1 = ${c.bData.q3} - ${c.bData.q1} = ${rb2}$.</p>`;
+    } else if(c.bType === 'histogramme' || c.bType === 'polygone') {
+        corr += `$\\bullet$ L'amplitude d'une classe est la différence entre ses bornes : $${c.bData.bins[1]} - ${c.bData.bins[0]} = ${rb1}$.<br>`;
+        corr += `$\\bullet$ Le pic le plus haut du graphique indique la classe modale, dont l'effectif est $${rb2}$.</p>`;
+    } else if(c.bType === 'camembert') {
+        corr += `$\\bullet$ La légende donne directement le pourcentage pour "${c.bData.labels[1]}" : $${rb1}$.<br>`;
+        corr += `$\\bullet$ Le secteur complet fait $360^{\\circ}$. Pour "${c.bData.labels[2]}" (${c.bData.pct[2]}\\% de l'effectif), l'angle est $\\dfrac{${c.bData.pct[2]}}{100} \\times 360 = ${rb2}$.</p>`;
+    }
+
+    cont.innerHTML = corr; cont.className = 'correction-visible';
+    if(window.MathJax) MathJax.typesetPromise([cont]);
+}
+
+function togglePopup() {
+    const p = document.getElementById('copyright-popup'), o = document.getElementById('overlay');
+    const h = p.style.display === 'none' || p.style.display === '';
+    p.style.display = h ? 'block' : 'none'; o.style.display = h ? 'block' : 'none';
+}
+
+function telechargerJSON() {
+    if(sessionLog.length === 0) { alert("Aucune donnée."); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(sessionLog, null, 2)], {type: 'application/json'}));
+    a.download = 'analyse_stats.json'; document.body.appendChild(a); a.click(); a.remove();
+}
+</script>
+</body>
+</html>
